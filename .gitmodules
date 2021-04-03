@@ -8,7 +8,7 @@
 	branch = main
 [submodule "icap-infrastructure"]
 	path = icap-infrastructure
-	url = git@github.com:elastisys/icap-infrastructure.git
+	url = git@github.com:k8-proxy/icap-infrastructure.git
 [submodule "compliantkubernetes-kubespray"]
 	path = compliantkubernetes-kubespray
 	url = git@github.com:elastisys/compliantkubernetes-kubespray.git

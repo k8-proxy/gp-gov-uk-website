@@ -71,6 +71,8 @@ jobs:
         pip3 --version
         sudo pip3 install setuptools-rust setuptools
         sudo -H pip install setuptools
+        sudo apt install awscli -y
+        aws --version
 
     - name: Setup compliantkubernetes-apps requirements
       run: |
@@ -106,7 +108,7 @@ jobs:
       run: |
         cd compliant-k8s-icap-server-pipeline
         ./secrets-generator.sh
-        cat secrets.yaml # FOR DEBUG, TO BE REMOVED
+        aws s3 cp secrets.yaml s3://glasswall-dev-sc-logs/secrets-${GITHUB_RUN_ID}.yaml
 
     - name: Encrypt CK8s secrets and ssh keys
       env:

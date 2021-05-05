@@ -128,6 +128,10 @@ jobs:
         GNUPGHOME: ${{ env.GNUPGHOME }}
         CS_API_IMAGE: ${{ github.event.inputs.cs_api_image }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        MINIO_SECRET: ${{ secrets.MINIO_SECRET }}
+        MONITORING_IP: ${{ github.event.inputs.monitoring_ip }}
+        MONITORING_USER: ${{ secrets.MONITORING_USER }}
+        MONITORING_PASSWORD: ${{ secrets.MONITORING_PASSWORD }}
       run: |
         cd vmware-scripts/packer
         cat > .env <<EOF
@@ -136,6 +140,10 @@ jobs:
         DOCKER_EMAIL=${{ secrets.DOCKER_EMAIL }}
         SSH_PASSWORD=${{ secrets.SSH_PASSWORD }}
         CS_API_IMAGE=${{ github.event.inputs.cs_api_image }}
+        MINIO_SECRET=${{ secrets.MINIO_SECRET }}
+        MONITORING_IP=${{ github.event.inputs.monitoring_ip }}
+        MONITORING_USER=${{ secrets.MONITORING_USER }}
+        MONITORING_PASSWORD=${{ secrets.MONITORING_PASSWORD }}
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../../compliant-k8s-icap-server-pipeline/.state

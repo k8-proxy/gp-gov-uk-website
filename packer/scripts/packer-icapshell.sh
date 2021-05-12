@@ -1,8 +1,8 @@
 #!/bin/bash
-source /home/ubuntu/packer/.env
-if [ -f /home/ubuntu/packer/update_partition_size.sh ] ; then
-chmod +x /home/ubuntu/packer/update_partition_size.sh
-/home/ubuntu/packer/update_partition_size.sh
+source /home/ubuntu/packer-scripts/.env
+if [ -f /home/ubuntu/packer-scripts/update_partition_size.sh ] ; then
+chmod +x /home/ubuntu/packer-scripts/update_partition_size.sh
+/home/ubuntu/packer-scripts/update_partition_size.sh
 fi
 
 apt-get install \
@@ -157,11 +157,11 @@ swapoff -a && rm -f /swap.img && sed -i '/swap.img/d' /etc/fstab && echo Swap re
 update-grub
 
 # installing the wizard
-install -T /home/ubuntu/packer/cwizard.sh /usr/local/bin/wizard -m 0755
+install -T /home/ubuntu/packer-scripts/cwizard.sh /usr/local/bin/wizard -m 0755
 
 # installing initconfig ( for running wizard on reboot )
-cp -f /home/ubuntu/packer/initconfig.service /etc/systemd/system/initconfigwizard.service
-install -T /home/ubuntu/packer/initconfig.sh /usr/local/bin/initconfig.sh -m 0755
+cp -f /home/ubuntu/packer-scripts/initconfig.service /etc/systemd/system/initconfigwizard.service
+install -T /home/ubuntu/packer-scripts/initconfig.sh /usr/local/bin/initconfig.sh -m 0755
 systemctl daemon-reload
 
 # enable initconfig for the next reboot

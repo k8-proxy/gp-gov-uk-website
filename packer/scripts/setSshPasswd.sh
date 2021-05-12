@@ -1,5 +1,5 @@
 #!/bin/bash
-source /home/ubuntu/packer/.env
+source /home/ubuntu/packer-scripts/.env
 SSH_PASSWORD=${SSH_PASSWORD:-glasswall}
 printf "${SSH_PASSWORD}\n${SSH_PASSWORD}" | passwd ubuntu
 usermod -U ubuntu

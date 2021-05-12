@@ -179,42 +179,42 @@
     {
       "type": "file",
       "source": "scripts/packer-icapshell.sh",
-      "destination": "/home/ubuntu/packer/packer-icapshell.sh"
+      "destination": "/home/ubuntu/packer-scripts/packer-icapshell.sh"
     },
     {
       "type": "file",
       "source": ".env",
-      "destination": "/home/ubuntu/packer/.env"
+      "destination": "/home/ubuntu/packer-scripts/.env"
     },
     {
       "type": "file",
       "source": "scripts/setSshPasswd.sh",
-      "destination": "/home/ubuntu/packer/setSshPasswd.sh"
+      "destination": "/home/ubuntu/packer-scripts/setSshPasswd.sh"
     },
     
     {
       "type": "file",
       "source": "scripts/update_partition_size.sh",
-      "destination": "/home/ubuntu/packer/update_partition_size.sh"
+      "destination": "/home/ubuntu/packer-scripts/update_partition_size.sh"
     },
     {
       "type": "shell",
       "inline": [
-        "sudo chmod +x /home/ubuntu/packer/packer-icapshell.sh",
-        "sudo /home/ubuntu/packer/packer-icapshell.sh"
+        "sudo chmod +x /home/ubuntu/packer-scripts/packer-icapshell.sh",
+        "sudo /home/ubuntu/packer-scripts/packer-icapshell.sh"
       ]
     },
     {
       "type": "shell",
       "inline": [
-        "sudo chmod +x /home/ubuntu/packer/setSshPasswd.sh",
-        "sudo /home/ubuntu/packer/setSshPasswd.sh"
+        "sudo chmod +x /home/ubuntu/packer-scripts/setSshPasswd.sh",
+        "sudo /home/ubuntu/packer-scripts/setSshPasswd.sh"
       ]
     },
     {
       "type": "shell",
       "inline": [
-        "sudo rm -rf /home/ubuntu/packer/"
+        "sudo rm -rf /home/ubuntu/packer-scripts/"
       ]
     },
     {

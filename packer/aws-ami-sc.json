@@ -97,7 +97,7 @@
         {
           "type":                 "shell-local",
           "environment_vars":     ["CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}", "GNUPGHOME={{ user `gnu_pgp_home` }}"],
-          "inline":               ["cd ../../compliantkubernetes-apps", "./bin/ck8s ops kubectl sc apply -f ../local-storage-pv-sc.yaml"]
+          "inline":               ["cd ../../compliantkubernetes-apps", "./bin/ck8s ops kubectl sc apply -f ../setup/local-storage-pv-sc.yaml"]
         },
         {
           "type":                 "shell",
@@ -115,7 +115,7 @@
         {
           "type":                 "shell-local",
           "environment_vars":     ["CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}", "GNUPGHOME={{ user `gnu_pgp_home` }}"],
-          "inline":               ["cd ../../compliantkubernetes-apps", "./bin/ck8s ops kubectl sc apply -f ../node-port-service-cluster.yaml"]
+          "inline":               ["cd ../../compliantkubernetes-apps", "./bin/ck8s ops kubectl sc apply -f ../setup/node-port-service-cluster.yaml"]
         },
         {
           "type": "file",

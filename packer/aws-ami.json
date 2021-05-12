@@ -145,7 +145,7 @@
       ],
       "inline": [
         "cd ../compliantkubernetes-apps",
-        "./bin/ck8s ops kubectl wc apply -f ../local-storage-pv.yaml"
+        "./bin/ck8s ops kubectl wc apply -f ../setup/local-storage-pv.yaml"
       ]
     },
     {

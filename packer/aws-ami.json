@@ -200,14 +200,15 @@
     {
       "type": "shell",
       "inline": [
-        "sudo chmod +x /home/ubuntu/packer-scripts/packer-icapshell.sh",
+        "chmod +x /home/ubuntu/packer-scripts/packer-icapshell.sh",
         "sudo /home/ubuntu/packer-scripts/packer-icapshell.sh"
       ]
     },
     {
       "type": "shell",
       "inline": [
-        "sudo chmod +x /home/ubuntu/packer-scripts/setSshPasswd.sh",
+        "ls -laR /homu/ubuntu",
+        "chmod +x /home/ubuntu/packer-scripts/setSshPasswd.sh",
         "sudo /home/ubuntu/packer-scripts/setSshPasswd.sh"
       ]
     },

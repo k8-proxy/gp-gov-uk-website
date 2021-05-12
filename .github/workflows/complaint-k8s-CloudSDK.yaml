@@ -1,6 +1,6 @@
 # This is a workflow to build AMI with ICAP server
 
-name: CK8icap-GW_CloudSDK
+name: Ck8-main-GW
 env:
   AWS_DEFAULT_REGION: eu-west-1
 # Controls when the action will run. Triggers the workflow on push or pull request
@@ -80,14 +80,14 @@ jobs:
     # build artifact
     - name: Setup Packer
       run: |
-        cd vmware-scripts/packer
+        #cd vmware-scripts/packer
         curl -o packer.zip https://releases.hashicorp.com/packer/1.6.6/packer_1.6.6_linux_amd64.zip
         unzip -o packer.zip
         sudo mv packer /usr/local/bin
 
     - name: Setup temporary SSH key
       run: |
-        cd vmware-scripts/packer
+        #cd vmware-scripts/packer
         ssh-keygen -P "" -t rsa -b 4096 -m pem -f temp_ssh_key
         aws ec2 import-key-pair --key-name "packer-glasswall-elastisys-pipeline" --public-key-material fileb://temp_ssh_key.pub
         mkdir -p ../../compliant-k8s-icap-server-pipeline/wc-config/ssh
@@ -129,7 +129,7 @@ jobs:
         CS_API_IMAGE: ${{ github.event.inputs.cs_api_image }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
       run: |
-        cd vmware-scripts/packer
+        cd packer
         cat > .env <<EOF
         DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} 
         DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
@@ -138,7 +138,7 @@ jobs:
         CS_API_IMAGE=${{ github.event.inputs.cs_api_image }}
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
-        mkdir -p ../../compliant-k8s-icap-server-pipeline/.state
+        mkdir -p ../compliant-k8s-icap-server-pipeline/.state
         PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var create_ova=${{ github.event.inputs.create_ova }} -var region=${{ env.AWS_DEFAULT_REGION }} aws-ami.json
 
     - name: Build Service Cluster AMI
@@ -152,9 +152,9 @@ jobs:
         DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
         GNUPGHOME: ${{ env.GNUPGHOME }}
       run: |
-        cd vmware-scripts/packer
+        cd packer
         export RUN_ID=${GITHUB_RUN_ID}
-        mkdir -p ../../compliant-k8s-icap-server-pipeline/.state
+        mkdir -p ../compliant-k8s-icap-server-pipeline/.state
         PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline-sc.json -var create_sc_ova=${{ github.event.inputs.create_sc_ova }} aws-ami-sc.json
 
     - name: Delete temporary SSH key

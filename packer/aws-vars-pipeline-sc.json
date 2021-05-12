@@ -1,0 +1,20 @@
+{
+      "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+      "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+      "region": "eu-west-1",
+      "vm_name": "ck8-cs-api-SC-CI",
+      "RUN_ID": "{{env `RUN_ID`}}",
+      "team_tag":"K8",
+      "owner_tag":"GithubCK8-CSAPI-CI",
+
+      "user_data_file": "user-data-aws-sc",
+
+      "ssh_user":             "ubuntu",
+      "ssh_keypair_name":     "packer-glasswall-elastisys-pipeline",
+      "ssh_private_key_file": "temp_ssh_key",
+
+      "security_group_id":    "sg-06cc8c1b956fc97c8",
+
+      "ck8s_config_path":     "{{env `GITHUB_WORKSPACE`}}/compliant-k8s-icap-server-pipeline/",
+      "gnu_pgp_home":         "{{env `GNUPGHOME`}}"
+}

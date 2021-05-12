@@ -3,9 +3,6 @@
 # sets the hostname to 'terraformed'
 hostname: terraformed
 
-ssh_authorized_keys:
-- [PUBLIC_SSH_KEY]
-
 write_files:
 - path: /etc/netplan/20-internal-network.yaml
   content: |
@@ -24,19 +21,11 @@ write_files:
       version: 2
       ethernets:
         ens192:
-          dhcp4: false #true to use dhcp
-          addresses:
-          - [IP_ADDRESS]/[MASK]
-          gateway4: [GATEWAY] # Set gw here
-          nameservers:
-            addresses:
-            - 8.8.4.4 # Set DNS ip address here
+          dhcp4: true
 - path: /usr/bin/initconfig.sh
   content: |
     #!/bin/bash
 
-    sleep 10
-    clear
     echo "
 
 
@@ -44,34 +33,36 @@ write_files:
     InitConfig
 
     "
-    docker run --rm -it \
-            -v /var/lib/cloud/instance:/workdir \
-            mikefarah/yq:3 \
-            yq r user-data.txt glasswall.cluster | tr '\r' '\n' > /home/ubuntu/cluster.txt
-    docker run --rm -it \
+
+    docker run --rm \
             -v /var/lib/cloud/instance:/workdir \
             mikefarah/yq:3 \
             yq r user-data.txt glasswall.monitoring.username | tr '\r' '\n' > /home/ubuntu/monitoring-username.txt
-    docker run --rm -it \
+    docker run --rm \
             -v /var/lib/cloud/instance:/workdir \
             mikefarah/yq:3 \
             yq r user-data.txt glasswall.monitoring.password | tr '\r' '\n' > /home/ubuntu/monitoring-password.txt
-    docker run --rm -it \
+    docker run --rm \
             -v /var/lib/cloud/instance:/workdir \
             mikefarah/yq:3 \
             yq r user-data.txt glasswall.logging.username | tr '\r' '\n' > /home/ubuntu/logging-username.txt
-    docker run --rm -it \
+    docker run --rm \
             -v /var/lib/cloud/instance:/workdir \
             mikefarah/yq:3 \
             yq r user-data.txt glasswall.logging.password | tr '\r' '\n' > /home/ubuntu/logging-password.txt
-    docker run --rm -it \
+    docker run --rm \
             -v /var/lib/cloud/instance:/workdir \
             mikefarah/yq:3 \
             yq r user-data.txt glasswall.domain | tr '\r' '\n' > /home/ubuntu/domain.txt
-    docker run --rm -it \
+    docker run --rm \
             -v /var/lib/cloud/instance:/workdir \
             mikefarah/yq:3 \
             yq r user-data.txt glasswall.service-cluster | tr '\r' '\n' > /home/ubuntu/service-cluster.txt
+    docker run --rm \
+            -v /var/lib/cloud/instance:/workdir \
+            mikefarah/yq:3 \
+            yq r user-data.txt glasswall.service-cluster-ip | tr '\r' '\n' > /home/ubuntu/service-cluster-ip.txt
+    ec2metadata --instance-id > /home/ubuntu/cluster.txt
     cluster=$(cat /home/ubuntu/cluster.txt)
     monitoring_username=$(cat /home/ubuntu/monitoring-username.txt)
     monitoring_password=$(cat /home/ubuntu/monitoring-password.txt)
@@ -79,24 +70,42 @@ write_files:
     logging_password=$(cat /home/ubuntu/logging-password.txt)
     domain=$(cat /home/ubuntu/domain.txt)
     service_cluster=$(cat /home/ubuntu/service-cluster.txt)
+    service_cluster_ip=$(cat /home/ubuntu/service-cluster-ip.txt)
 
     chown -R 1000:1000 /mnt/disks/
 
     export KUBECONFIG=/etc/kubernetes/admin.conf
+    wget https://raw.githubusercontent.com/k8-proxy/vmware-scripts/csapi-ck8-filedrop/packer/wc-coredns-configmap.yml -O /home/ubuntu/wc-coredns-configmap.yml
+    sed -i "s|8.8.8.8|$service_cluster_ip|" /home/ubuntu/wc-coredns-configmap.yml
+    kubectl apply -f /home/ubuntu/wc-coredns-configmap.yml
+    kubectl delete pod --namespace kube-system --selector k8s-app=kube-dns
+    rm /home/ubuntu/wc-coredns-configmap.yml
 
     cat /home/ubuntu/cluster.txt | xargs -I {} kubectl patch prometheuses.monitoring.coreos.com kube-prometheus-stack-prometheus -n monitoring --type='json' -p '[{"op": "replace", "path": "/spec/externalLabels/cluster", "value":"'{}'"}]'
     echo "https://influxdb.${service_cluster}/api/v1/prom/write?db=workload_cluster&u=${monitoring_username}&p=${monitoring_password}" > /home/ubuntu/influxdb-url.txt
     cat /home/ubuntu/influxdb-url.txt | xargs -I {} kubectl patch prometheuses.monitoring.coreos.com kube-prometheus-stack-prometheus -n monitoring --type='json' -p '[{"op": "replace", "path": "/spec/remoteWrite/0/url", "value":"'{}'"}]'
     kubectl delete pod -n monitoring prometheus-kube-prometheus-stack-prometheus-0
 
-    kubectl get cm -n fluentd fluentd-fluentd-elasticsearch -o yaml | sed 's/151-glasswall-ovh-kubespray-wc/'"${cluster}"'/' | kubectl apply -f - 
-    kubectl get cm -n kube-system fluentd-system-fluentd-elasticsearch -o yaml | sed 's/151-glasswall-ovh-kubespray-wc/'"${cluster}"'/' | kubectl apply -f - 
-    kubectl set env daemonset.apps/fluentd-fluentd-elasticsearch -n fluentd OUTPUT_HOST=elastic.${service_cluster}
-    kubectl set env daemonset.apps/fluentd-system-fluentd-elasticsearch -n kube-system OUTPUT_HOST=elastic.${service_cluster}
+    kubectl get cm -n fluentd fluentd-fluentd-elasticsearch -o yaml | sed 's/CLUSTER_NAME/'"${cluster}"'/' | kubectl apply -f -
+    kubectl get cm -n kube-system fluentd-system-fluentd-elasticsearch -o yaml | sed 's/CLUSTER_NAME/'"${cluster}"'/' | kubectl apply -f -
+    kubectl set env daemonset.apps/fluentd-fluentd-elasticsearch -n fluentd OUTPUT_HOSTS=elastic.${service_cluster}
+    kubectl set env daemonset.apps/fluentd-system-fluentd-elasticsearch -n kube-system OUTPUT_HOSTS=elastic.${service_cluster}
     kubectl set env daemonset.apps/fluentd-fluentd-elasticsearch -n fluentd OUTPUT_USER=${logging_username}
     kubectl set env daemonset.apps/fluentd-system-fluentd-elasticsearch -n kube-system OUTPUT_USER=${logging_username}
     cat /home/ubuntu/logging-password.txt | xargs -I {} kubectl patch secret -n fluentd elasticsearch --type='json' -p '[{"op": "replace", "path": "/data/password", "value":"'{}'"}]'
     cat /home/ubuntu/logging-password.txt | xargs -I {} kubectl patch secret -n kube-system elasticsearch --type='json' -p '[{"op": "replace", "path": "/data/password", "value":"'{}'"}]'
+
+    while [ ! -d /mnt/disks/prometheus-db ]; do sleep 10; done
+    chown -R 1000:1000 /mnt/disks/prometheus-db
+
+    > /home/ubuntu/monitoring-username.txt
+    > /home/ubuntu/monitoring-password.txt
+    > /home/ubuntu/logging-username.txt
+    > /home/ubuntu/logging-password.txt
+    > /home/ubuntu/service-cluster.txt
+    > /home/ubuntu/service-cluster-ip.txt
+    > /home/ubuntu/cluster.txt
+    > /home/ubuntu/domain.txt
 
     exit
 
@@ -104,16 +113,48 @@ write_files:
   content: |
     [Unit]
     Description=InitConfig
+    After=kubelet.service
 
     [Service]
     Type=oneshot
-    ExecStart=/usr/bin/openvt -s -w /usr/bin/initconfig.sh
+    ExecStartPre=kubectl get pods --kubeconfig=/etc/kubernetes/admin.conf -A
+    ExecStart=/usr/bin/initconfig.sh
 
     RemainAfterExit=yes
     TimeoutSec=0
 
+    Restart=on-failure
+    RestartSec=30
+
     # Output needs to appear in instance console output
     StandardOutput=journal+console
+    StandardError=journal+console
+    SyslogIdentifier=initconfig
+
+    [Install]
+    WantedBy=cloud-init.target
+
+- path: /etc/systemd/system/initconfig-prometheus.service
+  content: |
+    [Unit]
+    Description=InitConfigPrometheus
+    After=initconfig.service
+
+    [Service]
+    Type=oneshot
+    ExecStartPre=test -d /mnt/disks/prometheus-db
+    ExecStart=chown -R 1000:1000 /mnt/disks/prometheus-db
+
+    RemainAfterExit=yes
+    TimeoutSec=0
+
+    Restart=on-failure
+    RestartSec=30
+
+    # Output needs to appear in instance console output
+    StandardOutput=journal+console
+    StandardError=journal+console
+    SyslogIdentifier=initconfig
 
     [Install]
     WantedBy=cloud-init.target
@@ -122,17 +163,8 @@ runcmd:
   - netplan apply
   - sleep 5
   - ifconfig -a
-  - route -n  
+  - route -n
   - chmod a+r /var/lib/cloud/instance/user-data.txt
   - chmod 755 /usr/bin/initconfig.sh
-
-glasswall:
-  cluster: [CLUSTER_NAME]
-  monitoring:
-    username: [MONITORING_USERNAME]
-    password: [MONITORING_PASSWORD]
-  logging:
-    username: [LOGGING_USERNAME]
-    password: [LOGGING_PASSWORD]
-  domain: [DOMAIN]
-  service-cluster: [SERVICE_CLUSTER]
+  - systemctl daemon-reload
+  - systemctl enable initconfig

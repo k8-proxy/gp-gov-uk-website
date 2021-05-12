@@ -1,0 +1,179 @@
+{
+    "variables": {},
+    "builders": [
+      {
+        "access_key": "{{user `aws_access_key`}}",
+        "ami_name": "{{user `vm_name`}}-{{user `RUN_ID`}}",
+        "instance_type": "t3.2xlarge",
+        "region": "{{user `region`}}",
+        "secret_key": "{{user `aws_secret_key`}}",
+
+        "user_data_file": "{{user `user_data_file`}}",
+
+        "ssh_username":         "{{ user `ssh_user` }}",
+        "ssh_keypair_name":     "{{ user `ssh_keypair_name` }}",
+        "ssh_private_key_file": "{{ user `ssh_private_key_file` }}",
+        "ssh_timeout": "20m",
+        "security_group_id": "{{ user `security_group_id` }}",
+        "type": "amazon-ebs",
+        "ami_regions": ["{{user `region`}}"],
+        "source_ami_filter": {
+            "filters": {
+            "virtualization-type": "hvm",
+            "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+            "root-device-type": "ebs"
+            },
+            "owners": ["099720109477"],
+            "most_recent": true
+         },
+        "tags": {
+            "OS_Version": "Ubuntu-20.04",
+            "Base_AMI_Name": "{{ .SourceAMIName }}"
+        },
+        "run_tags": {
+            "Name": "Packer Builder {{user `vm_name`}}",
+            "Team": "{{user `team_tag`}}",
+            "Owner": "{{user `owner_tag`}}",
+            "Scope": "#k8s-compliant-kubernetes",
+            "Delete": "No"
+        },
+        "launch_block_device_mappings": [
+          {
+            "device_name": "/dev/sda1",
+            "volume_type": "gp2",
+            "volume_size": 200,
+            "delete_on_termination": true
+          }
+        ]
+      }
+    ],
+      "provisioners": [
+        {
+          "type": "shell",
+          "inline": [ "sleep 30", "sudo apt -y update && sudo apt -y upgrade" ]
+        },
+        {
+          "type": "shell",
+          "inline": [ "sudo apt -y install python3-pip", "sudo pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz" ]
+        },
+        {
+          "type": "shell",
+          "inline": [ "ec2metadata --local-ipv4 > /tmp/private_ip" ]
+        },
+        {
+          "type": "shell",
+          "inline": ["curl http://checkip.amazonaws.com -o /tmp/public_ip"]
+        },
+        {
+          "type": "file",
+          "direction": "download",
+          "source": "/tmp/private_ip",
+          "destination": "private_ip"
+        },
+        {
+          "type": "file",
+          "direction": "download",
+          "source": "/tmp/public_ip",
+          "destination": "public_ip"
+        },
+        {
+          "type":                 "shell-local",
+          "inline":               ["sed 's/\\./-/g' private_ip > private_ip_underscore", "PRIVATE_IP=$(cat private_ip_underscore)", "cd {{ user `ck8s_config_path` }}/sc-config", "sed 's/{PRIVATE_IP}/'\"${PRIVATE_IP}\"'/g' inventory.ini.template > inventory.ini"]
+        },
+        {
+          "type":                 "shell-local",
+          "inline":               ["PUBLIC_IP=$(cat public_ip)", "cd {{ user `ck8s_config_path` }}/sc-config", "sed -i 's/{PUBLIC_IP}/'\"${PUBLIC_IP}\"'/g' inventory.ini", "sed 's/{PUBLIC_IP}/'\"${PUBLIC_IP}\"'/g' group_vars/k8s-cluster/k8s-cluster.yml.template > group_vars/k8s-cluster/k8s-cluster.yml"]
+        },
+        {
+          "type":                 "shell-local",
+          "environment_vars":     ["CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}", "GNUPGHOME={{ user `gnu_pgp_home` }}"],
+          "inline":               ["cd ../../compliantkubernetes-kubespray/", "git submodule init", "git submodule update", "cd kubespray", "git checkout v2.15.0", "cd ..", "./bin/ck8s-kubespray apply sc"]
+        },
+        {
+          "type":                 "shell-local",
+          "environment_vars":     ["CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}", "GNUPGHOME={{ user `gnu_pgp_home` }}"],
+          "inline":               ["PRIVATE_IP=$(cat private_ip)", "PUBLIC_IP=$(cat public_ip)", "cd {{ user `ck8s_config_path` }}", "sops -i -d .state/kube_config_sc.yaml", "sed -i 's/'172.17.0.100'/'\"${PUBLIC_IP}\"'/' .state/kube_config_sc.yaml", "sops -i -e .state/kube_config_sc.yaml"]
+        },
+        {
+          "type":                 "shell-local",
+          "environment_vars":     ["CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}", "GNUPGHOME={{ user `gnu_pgp_home` }}"],
+          "inline":               ["cd ../../compliantkubernetes-apps", "./bin/ck8s ops kubectl sc apply -f ../local-storage-pv-sc.yaml"]
+        },
+        {
+          "type":                 "shell",
+          "inline":               ["for i in $(seq 1 8); do sudo mkdir -p /mnt/disks/pv$i/prometheus-db; sudo chown -R 1000:1000 /mnt/disks/pv$i; done"]
+        },
+        {
+          "type":                 "shell",
+          "inline":               ["sudo kubectl patch storageclass local-storage -p '{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}'"]
+        },
+        {
+          "type":                 "shell-local",
+          "environment_vars":     ["CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}", "GNUPGHOME={{ user `gnu_pgp_home` }}"],
+          "inline":               ["cd ../../compliantkubernetes-apps", "./bin/ck8s apply sc"]
+        },
+        {
+          "type":                 "shell-local",
+          "environment_vars":     ["CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}", "GNUPGHOME={{ user `gnu_pgp_home` }}"],
+          "inline":               ["cd ../../compliantkubernetes-apps", "./bin/ck8s ops kubectl sc apply -f ../node-port-service-cluster.yaml"]
+        },
+        {
+          "type": "file",
+          "source": ".env",
+          "destination": "/home/ubuntu/packer/.env"
+        },
+        {
+          "type": "file",
+          "source": "setSshPasswd.sh",
+          "destination": "/home/ubuntu/packer/setSshPasswd.sh"
+        },
+        {
+          "type": "file",
+          "source": "setup-sc.sh",
+          "destination": "/home/ubuntu/packer/setup-sc.sh"
+        },
+        {
+          "type": "shell",
+          "inline": [
+            "chmod +x /home/ubuntu/packer/setup-sc.sh",
+            "sudo /home/ubuntu/packer/setup-sc.sh"
+          ]
+        },
+        {
+          "type": "shell",
+          "inline": [
+            "chmod +x /home/ubuntu/packer/setSshPasswd.sh",
+            "sudo /home/ubuntu/packer/setSshPasswd.sh"
+          ]
+        },
+        {
+          "type": "shell",
+          "inline": [
+            "sudo rm -rf /home/ubuntu/packer/"            
+          ]
+        },
+        {
+          "type": "shell-local",
+          "inline_shebang": "/bin/bash",
+          "inline": [
+            "set -e",
+            "CREATE_SC_OVA={{user `create_sc_ova`}}",
+            "if [[ $CREATE_SC_OVA == 'true' ]]; then",
+            "aws ec2 create-instance-export-task --region {{user `region`}} --instance-id {{build `ID`}} --target-environment vmware --export-to-s3-task file://ova-export.json > out.json",
+            "fi"
+          ]
+        },
+        {
+          "type": "shell-local",
+          "environment_vars": [
+            "OVA_NAME={{user `vm_name`}}-sc-{{user `RUN_ID`}}.ova",
+            "VM_NAME=csapi-ck8icap",
+            "CREATE_OVA={{user `create_sc_ova`}}"
+          ],
+          "inline": [
+            "chmod +x scripts/ova-check.sh",
+            "scripts//ova-check.sh"
+          ]
+        }
+    ]
+}

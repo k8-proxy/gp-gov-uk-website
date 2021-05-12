@@ -9,6 +9,3 @@
 [submodule "compliantkubernetes-kubespray"]
 	path = compliantkubernetes-kubespray
 	url = https://github.com/k8-proxy/compliantkubernetes-kubespray
-[submodule "vmware-scripts"]
-	path = vmware-scripts
-	url = https://github.com/k8-proxy/vmware-scripts

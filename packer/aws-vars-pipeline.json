@@ -10,7 +10,7 @@
       "user_data_file": "user-data-aws",
 
       "ssh_user":             "ubuntu",
-      "ssh_keypair_name":     "packer-glasswall-elastisys-pipeline",
+      "ssh_keypair_name":     "packer-ck8-{{env `RUN_ID`}}",
       "ssh_private_key_file": "temp_ssh_key",
 
       "security_group_id":    "sg-06cc8c1b956fc97c8",

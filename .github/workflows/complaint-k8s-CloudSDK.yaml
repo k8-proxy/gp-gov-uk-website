@@ -91,7 +91,7 @@ jobs:
       run: |
         cd packer
         ssh-keygen -P "" -t rsa -b 4096 -m pem -f temp_ssh_key
-        aws ec2 import-key-pair --key-name "packer-glasswall-elastisys-pipeline" --public-key-material fileb://temp_ssh_key.pub
+        aws ec2 import-key-pair --key-name "packer-ck8-${GITHUB_RUN_ID}" --public-key-material fileb://temp_ssh_key.pub
         mkdir -p ../compliant-k8s-icap-server-pipeline/wc-config/ssh
         cp temp_ssh_key ../compliant-k8s-icap-server-pipeline/wc-config/ssh/id_rsa
         mkdir -p ../compliant-k8s-icap-server-pipeline/sc-config/ssh

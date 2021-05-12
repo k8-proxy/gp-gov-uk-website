@@ -173,7 +173,7 @@
         "GNUPGHOME={{ user `gnu_pgp_home` }}"
       ],
       "inline": [
-        "../compliantkubernetes-apps/bin/ck8s ops kubectl wc apply -f ../default-restricted-psp.yaml"
+        "../compliantkubernetes-apps/bin/ck8s ops kubectl wc apply -f ../setup/default-restricted-psp.yaml"
       ]
     },
     {

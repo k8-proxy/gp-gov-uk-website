@@ -120,36 +120,36 @@
         {
           "type": "file",
           "source": ".env",
-          "destination": "/home/ubuntu/packer-scripts/.env"
+          "destination": "/home/ubuntu/scripts/.env"
         },
         {
           "type": "file",
           "source": "setSshPasswd.sh",
-          "destination": "/home/ubuntu/packer-scripts/setSshPasswd.sh"
+          "destination": "/home/ubuntu/scripts/setSshPasswd.sh"
         },
         {
           "type": "file",
           "source": "setup-sc.sh",
-          "destination": "/home/ubuntu/packer-scripts/setup-sc.sh"
+          "destination": "/home/ubuntu/scripts/setup-sc.sh"
         },
         {
           "type": "shell",
           "inline": [
-            "chmod +x /home/ubuntu/packer-scripts/setup-sc.sh",
-            "sudo /home/ubuntu/packer-scripts/setup-sc.sh"
+            "chmod +x /home/ubuntu/scripts/setup-sc.sh",
+            "sudo /home/ubuntu/scripts/setup-sc.sh"
           ]
         },
         {
           "type": "shell",
           "inline": [
-            "chmod +x /home/ubuntu/packer-scripts/setSshPasswd.sh",
-            "sudo /home/ubuntu/packer-scripts/setSshPasswd.sh"
+            "chmod +x /home/ubuntu/scripts/setSshPasswd.sh",
+            "sudo /home/ubuntu/scripts/setSshPasswd.sh"
           ]
         },
         {
           "type": "shell",
           "inline": [
-            "sudo rm -rf /home/ubuntu/packer-scripts/"            
+            "sudo rm -rf /home/ubuntu/scripts/"            
           ]
         },
         {

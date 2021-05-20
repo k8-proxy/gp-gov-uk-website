@@ -178,39 +178,34 @@
       ]
     },
     {
-      "type": "shell",
-      "inline": [
-        "mkdir /home/ubuntu/packer-scripts"
-      ]
+      "type": "file",
+      "source": "scripts",
+      "destination": "/home/ubuntu"
     },
     {
       "type": "file",
       "source": ".env",
-      "destination": "/home/ubuntu/packer-scripts/.env"
-    },
-    {
-      "type": "file",
-      "source": "scripts",
-      "destination": "/home/ubuntu/packer-scripts"
+      "destination": "/home/ubuntu/scripts/.env"
     },
     {
       "type": "shell",
       "inline": [
-        "chmod +x /home/ubuntu/packer-scripts/setSshPasswd.sh",
-        "sudo /home/ubuntu/packer-scripts/setSshPasswd.sh"
+        "ls -laR /home/ubuntu",
+        "chmod +x /home/ubuntu/scripts/setSshPasswd.sh",
+        "sudo /home/ubuntu/scripts/setSshPasswd.sh"
       ]
     },
     {
       "type": "shell",
       "inline": [
-        "chmod +x /home/ubuntu/packer-scripts/packer-icapshell.sh",
-        "sudo /home/ubuntu/packer-scripts/packer-icapshell.sh"
+        "chmod +x /home/ubuntu/scripts/packer-icapshell.sh",
+        "sudo /home/ubuntu/scripts/packer-icapshell.sh"
       ]
     },
     {
       "type": "shell",
       "inline": [
-        "sudo rm -rf /home/ubuntu/packer-scripts/"
+        "sudo rm -rf /home/ubuntu/scripts/"
       ]
     },
     {

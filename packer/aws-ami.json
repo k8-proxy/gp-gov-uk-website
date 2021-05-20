@@ -178,6 +178,12 @@
       ]
     },
     {
+      "type": "shell",
+      "inline": [
+        "mkdir /home/ubuntu/packer-scripts"
+      ]
+    },
+    {
       "type": "file",
       "source": "scripts/packer-icapshell.sh",
       "destination": "/home/ubuntu/packer-scripts/packer-icapshell.sh"

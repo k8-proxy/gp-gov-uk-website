@@ -61,15 +61,6 @@ jobs:
     #   run: |
     #     git submodule foreach git fetch
     #     git submodule foreach git pull origin main
-    - name: Show workflow inputs
-          run: |
-            echo BRANCH=${{ github.ref }}
-            echo INSTALL_CSAPI=${{ github.event.inputs.install_csapi }}
-            echo CS_API_IMAGE=${{ github.event.inputs.cs_api_image }}
-            echo INSTALL_FILEDROP_UI=${{ github.event.inputs.install_filedrop_ui }}
-            echo CREATE_OVA=${{ github.event.inputs.create_ova }}
-            echo ICAP_FLAVOUR=${{ github.event.inputs.icap_flavour }}
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:

@@ -200,7 +200,7 @@
     {
       "type": "shell",
       "inline": [
-        "ls -laR /homu/ubuntu",
+        "ls -laR /home/ubuntu",
         "chmod +x /home/ubuntu/packer-scripts/setSshPasswd.sh",
         "sudo /home/ubuntu/packer-scripts/setSshPasswd.sh"
       ]

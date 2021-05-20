@@ -61,8 +61,6 @@ jobs:
     - name: Show workflow inputs
       run: |
         echo BRANCH=${{ github.ref }}
-        echo ICAP_BRANCH=${{ github.event.inputs.icap_branch }}
-        echo ICAP_SOW_BRANCH=${{ github.event.inputs.sow_branch }}
         echo INSTALL_CSAPI=${{ github.event.inputs.install_csapi }}
         echo CS_API_IMAGE=${{ github.event.inputs.cs_api_image }}
         echo INSTALL_FILEDROP_UI=${{ github.event.inputs.install_filedrop_ui }}

@@ -185,28 +185,17 @@
     },
     {
       "type": "file",
-      "source": "scripts/packer-icapshell.sh",
-      "destination": "/home/ubuntu/packer-scripts/packer-icapshell.sh"
-    },
-    {
-      "type": "file",
       "source": ".env",
       "destination": "/home/ubuntu/packer-scripts/.env"
     },
     {
       "type": "file",
-      "source": "scripts/setSshPasswd.sh",
-      "destination": "/home/ubuntu/packer-scripts/setSshPasswd.sh"
-    },
-    {
-      "type": "file",
-      "source": "scripts/update_partition_size.sh",
-      "destination": "/home/ubuntu/packer-scripts/update_partition_size.sh"
+      "source": "scripts",
+      "destination": "/home/ubuntu/packer-scripts"
     },
     {
       "type": "shell",
       "inline": [
-        "ls -laR /home/ubuntu",
         "chmod +x /home/ubuntu/packer-scripts/setSshPasswd.sh",
         "sudo /home/ubuntu/packer-scripts/setSshPasswd.sh"
       ]

@@ -205,7 +205,8 @@
     {
       "type": "shell",
       "inline": [
-        "sudo rm -rf /home/ubuntu/scripts/"
+        "sudo rm -rf /home/ubuntu/scripts/",
+        "sudo rm -rf /home/ubuntu/icap-infrastructure/"
       ]
     },
     {

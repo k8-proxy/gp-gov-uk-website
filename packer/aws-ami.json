@@ -206,7 +206,7 @@
       "inline_shebang": "/bin/bash",
       "inline": [
         "set -e",
-        "CREATE_OVA={{user `create_ova`}}",
+        "CREATE_OVA={{user `CREATE_OVA`}}",
         "if [[ $CREATE_OVA == 'true' ]]; then",
         "aws ec2 create-instance-export-task --region {{user `region`}} --instance-id {{build `ID`}} --target-environment vmware --export-to-s3-task file://ova-export.json > out.json",
         "fi"
@@ -217,7 +217,7 @@
       "environment_vars": [
         "OVA_NAME={{user `vm_name`}}-wc-{{user `RUN_ID`}}.ova",
         "VM_NAME=csapi-ck8icap",
-        "CREATE_OVA={{user `create_ova`}}"
+        "CREATE_OVA={{user `CREATE_OVA`}}"
       ],
       "inline": ["chmod +x scripts/ova-check.sh", "scripts/ova-check.sh"]
     }

@@ -57,15 +57,27 @@ kubectl create -n icap-adaptation secret docker-registry regcred --docker-server
 if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
 	snap install yq
 	requestImage=$(yq eval '.imagestore.requestprocessing.tag' values.yaml)
-	docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 	docker pull glasswallsolutions/icap-request-processing:$requestImage
 	docker tag glasswallsolutions/icap-request-processing:$requestImage localhost:30500/icap-request-processing:$requestImage
 	docker push localhost:30500/icap-request-processing:$requestImage
 	helm upgrade adaptation --values custom-values.yaml --install . --namespace icap-adaptation  --set imagestore.requestprocessing.registry='localhost:30500/' \
 	--set imagestore.requestprocessing.repository='icap-request-processing'
-else
-	helm upgrade adaptation --values custom-values.yaml --install . --namespace icap-adaptation
 fi
+
+if [[ "${ICAP_FLAVOUR}" == "golang" ]]; then
+	helm upgrade adaptation --values custom-values.yaml --install . --namespace icap-adaptation
+	# Install minio
+	kubectl create ns minio
+	helm repo add minio https://helm.min.io/
+	helm install -n minio --set accessKey=minio,secretKey=$MINIO_SECRET,buckets[0].name=sourcefiles,buckets[0].policy=none,buckets[0].purge=false,buckets[1].name=cleanfiles,buckets[1].policy=none,buckets[1].purge=false,fullnameOverride=minio-server,persistence.enabled=false minio/minio --generate-name
+	kubectl create -n icap-adaptation secret generic minio-credentials --from-literal=username='minio' --from-literal=password=$MINIO_SECRET
+	git clone https://github.com/k8-proxy/go-k8s-infra.git -b develop && cd go-k8s-infra
+	kubectl -n icap-adaptation scale --replicas=0 deployment/adaptation-service
+	pushd services
+	helm upgrade servicesv2 --install . --namespace icap-adaptation
+	popd
+fi
+
 
 kubectl patch svc frontend-icap-lb -n icap-adaptation --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"},{"op":"replace","path":"/spec/ports/0/nodePort","value":1344},{"op":"replace","path":"/spec/ports/1/nodePort","value":1345}]'
 cd ..
@@ -121,26 +133,7 @@ EOF
 fi
 
 
-if [[ "$ICAP_FLAVOUR" == "golang" ]]; then
-	# Install minio
-	kubectl create ns minio
-	helm repo add minio https://helm.min.io/
-	helm install -n minio --set accessKey=minio,secretKey=$MINIO_SECRET,buckets[0].name=sourcefiles,buckets[0].policy=none,buckets[0].purge=false,buckets[1].name=cleanfiles,buckets[1].policy=none,buckets[1].purge=false,fullnameOverride=minio-server,persistence.enabled=false minio/minio --generate-name
 
-	kubectl create -n icap-adaptation secret generic minio-credentials --from-literal=username='minio' --from-literal=password=$MINIO_SECRET
-
-	# deploy new Go services
-	git clone https://github.com/k8-proxy/go-k8s-infra.git -b develop && cd go-k8s-infra
-
-	# Scale the existing adaptation service to 0
-	kubectl -n icap-adaptation scale --replicas=0 deployment/adaptation-service
-
-	# Apply helm chart to create the services
-	pushd services
-	helm upgrade servicesv2 --install . --namespace icap-adaptation
-	popd
-
-fi
 
 
 

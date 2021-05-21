@@ -8,7 +8,7 @@ env:
 on:
   workflow_dispatch:
     inputs:
-      icap_flavour:
+      ICAP_FLAVOUR:
         description: classic vs golang (GoLang and minio based)
         default: classic
         required: true
@@ -24,19 +24,19 @@ on:
         description: Filedrop UI Required (CS-API must be True)
         default: "true"
         required: true    
-      cs_api_image:
+      CS_API_IMAGE:
         description: CS API Image (CS-API must be True)
         default: glasswallsolutions/cs-k8s-api:latest
         required: true 
-      create_wc:
+      CREATE_WC:
         description: Create Workload Cluster
         default: "true"
         required: true 
-      create_sc:
+      CREATE_SC:
         description: Create Service Cluster
         default: "false"
         required: true 
-      create_ova:
+      CREATE_OVA:
         description: Create OVA
         default: "false"
         required: true
@@ -66,10 +66,10 @@ jobs:
       run: |
         echo BRANCH=${{ github.ref }}
         echo INSTALL_CSAPI=${{ github.event.inputs.install_csapi }}
-        echo CS_API_IMAGE=${{ github.event.inputs.cs_api_image }}
+        echo CS_API_IMAGE=${{ github.event.inputs.CS_API_IMAGE }}
         echo INSTALL_FILEDROP_UI=${{ github.event.inputs.install_filedrop_ui }}
-        echo CREATE_OVA=${{ github.event.inputs.create_ova }}
-        echo ICAP_FLAVOUR=${{ github.event.inputs.icap_flavour }}
+        echo CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
+        echo ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
         echo INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
 
     # - name: Update submodules
@@ -146,7 +146,7 @@ jobs:
         sops -i -e sc-config/ssh/id_rsa
 
     - name: Build Workload Cluster AMI
-      if: ${{ github.event.inputs.create_wc == 'true' }}
+      if: ${{ github.event.inputs.CREATE_WC == 'true' }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -155,7 +155,7 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
         GNUPGHOME: ${{ env.GNUPGHOME }}
-        CS_API_IMAGE: ${{ github.event.inputs.cs_api_image }}
+        CS_API_IMAGE: ${{ github.event.inputs.CS_API_IMAGE }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
       run: |
         cd packer
@@ -164,18 +164,18 @@ jobs:
         DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
         DOCKER_EMAIL=${{ secrets.DOCKER_EMAIL }}
         SSH_PASSWORD=${{ secrets.SSH_PASSWORD }}
-        CS_API_IMAGE=${{ github.event.inputs.cs_api_image }}
+        CS_API_IMAGE=${{ github.event.inputs.CS_API_IMAGE }}
         INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
         INSTALL_FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }}
         INSTALL_CSAPI=${{ github.event.inputs.INSTALL_CSAPI }}
-        icap_flavour=${{ github.event.inputs.icap_flavour }}
+        ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var create_ova=${{ github.event.inputs.create_ova }} -var region=${{ env.AWS_DEFAULT_REGION }} -var cs_api=${{ github.event.inputs.install_csapi }} -var filedrop_ui=${{ github.event.inputs.install_filedrop_ui }} -var icap_flavour=${{ github.event.inputs.icap_flavour }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} aws-ami.json
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var cs_api=${{ github.event.inputs.install_csapi }} -var filedrop_ui=${{ github.event.inputs.install_filedrop_ui }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} aws-ami.json
 
     - name: Build Service Cluster AMI
-      if: ${{ github.event.inputs.create_sc == 'true' }}
+      if: ${{ github.event.inputs.CREATE_SC == 'true' }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -191,7 +191,7 @@ jobs:
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline-sc.json -var create_ova=${{ github.event.inputs.create_ova }} aws-ami-sc.json
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline-sc.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} aws-ami-sc.json
 
     - name: Delete temporary SSH key
       if: always()

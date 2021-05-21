@@ -28,6 +28,10 @@ on:
         description: CS API Image (CS-API must be True)
         default: glasswallsolutions/cs-k8s-api:latest
         required: true 
+      create_wc:
+        description: Create Workload Cluster
+        default: "true"
+        required: true 
       create_sc:
         description: Create Service Cluster
         default: "false"
@@ -66,6 +70,7 @@ jobs:
         echo INSTALL_FILEDROP_UI=${{ github.event.inputs.install_filedrop_ui }}
         echo CREATE_OVA=${{ github.event.inputs.create_ova }}
         echo ICAP_FLAVOUR=${{ github.event.inputs.icap_flavour }}
+        echo INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
 
     # - name: Update submodules
     #   run: |
@@ -141,6 +146,7 @@ jobs:
         sops -i -e sc-config/ssh/id_rsa
 
     - name: Build Workload Cluster AMI
+      if: ${{ github.event.inputs.create_wc == 'true' }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -166,7 +172,7 @@ jobs:
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var create_ova=${{ github.event.inputs.create_ova }} -var region=${{ env.AWS_DEFAULT_REGION }} aws-ami.json
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var create_ova=${{ github.event.inputs.create_ova }} -var region=${{ env.AWS_DEFAULT_REGION }} -var cs_api=${{ github.event.inputs.install_csapi }} -var filedrop_ui=${{ github.event.inputs.install_filedrop_ui }} -var icap_flavour=${{ github.event.inputs.icap_flavour }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} aws-ami.json
 
     - name: Build Service Cluster AMI
       if: ${{ github.event.inputs.create_sc == 'true' }}

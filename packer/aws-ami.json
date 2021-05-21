@@ -14,24 +14,26 @@
       "ssh_timeout": "20m",
       "security_group_id": "{{ user `security_group_id` }}",
       "type": "amazon-ebs",
-      "ami_regions": [
-        "{{user `region`}}"
-      ],
+      "ami_regions": ["{{user `region`}}"],
       "source_ami_filter": {
         "filters": {
           "virtualization-type": "hvm",
           "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
           "root-device-type": "ebs"
         },
-        "owners": [
-          "099720109477"
-        ],
+        "owners": ["099720109477"],
         "most_recent": true
       },
       "tags": {
         "OS_Version": "Ubuntu-20.04",
         "Base_AMI_Name": "{{ .SourceAMIName }}",
-        "Github_Run_id": "{{user `github_sha`}}"
+        "Github_Run_id": "{{user `github_sha`}}",
+        "Name": "{{user `vm_name`}}",
+        "CS_CK8S_API": "{{user `cs_api` }}",
+        "M_UI": "{{user `M_UI` }}",
+        "Filedrop_UI": "{{user `filedrop_ui`}}",
+        "K8S_Flavour": "CK8",
+        "ICAP_Flavour": "{{user `icap_flavour`}}"
       },
       "run_tags": {
         "Name": "Packer Builder {{user `vm_name`}}",
@@ -53,10 +55,7 @@
   "provisioners": [
     {
       "type": "shell",
-      "inline": [
-        "sleep 30",
-        "sudo apt -y update && sudo apt -y upgrade"
-      ]
+      "inline": ["sleep 30", "sudo apt -y update && sudo apt -y upgrade"]
     },
     {
       "type": "shell",
@@ -67,15 +66,11 @@
     },
     {
       "type": "shell",
-      "inline": [
-        "ec2metadata --local-ipv4 > /tmp/private_ip"
-      ]
+      "inline": ["ec2metadata --local-ipv4 > /tmp/private_ip"]
     },
     {
       "type": "shell",
-      "inline": [
-        "curl http://checkip.amazonaws.com -o /tmp/public_ip"
-      ]
+      "inline": ["curl http://checkip.amazonaws.com -o /tmp/public_ip"]
     },
     {
       "type": "file",
@@ -155,10 +150,7 @@
         "CK8S_CONFIG_PATH={{ user `ck8s_config_path` }}",
         "GNUPGHOME={{ user `gnu_pgp_home` }}"
       ],
-      "inline": [
-        "cd ../compliantkubernetes-apps",
-        "./bin/ck8s apply wc"
-      ]
+      "inline": ["cd ../compliantkubernetes-apps", "./bin/ck8s apply wc"]
     },
     {
       "type": "shell",
@@ -227,10 +219,7 @@
         "VM_NAME=csapi-ck8icap",
         "CREATE_OVA={{user `create_ova`}}"
       ],
-      "inline": [
-        "chmod +x scripts/ova-check.sh",
-        "scripts/ova-check.sh"
-      ]
+      "inline": ["chmod +x scripts/ova-check.sh", "scripts/ova-check.sh"]
     }
   ]
 }

@@ -193,16 +193,6 @@
       "destination": "/home/ubuntu/scripts/.env"
     },
     {
-      "type": "file",
-      "source": "setSshPasswd.sh",
-      "destination": "/home/ubuntu/scripts/setSshPasswd.sh"
-    },
-    {
-      "type": "file",
-      "source": "setup-sc.sh",
-      "destination": "/home/ubuntu/scripts/setup-sc.sh"
-    },
-    {
       "type": "shell",
       "inline": [
         "chmod +x /home/ubuntu/scripts/setup-sc.sh",

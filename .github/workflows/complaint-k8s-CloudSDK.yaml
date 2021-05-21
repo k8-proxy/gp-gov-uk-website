@@ -67,7 +67,7 @@ jobs:
         echo BRANCH=${{ github.ref }}
         echo INSTALL_CSAPI=${{ github.event.inputs.install_csapi }}
         echo CS_API_IMAGE=${{ github.event.inputs.CS_API_IMAGE }}
-        echo INSTALL_FILEDROP_UI=${{ github.event.inputs.install_filedrop_ui }}
+        echo INSTALL_FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }}
         echo CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
         echo ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
         echo INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
@@ -172,7 +172,7 @@ jobs:
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var cs_api=${{ github.event.inputs.install_csapi }} -var filedrop_ui=${{ github.event.inputs.install_filedrop_ui }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} aws-ami.json
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} aws-ami.json
 
     - name: Build Service Cluster AMI
       if: ${{ github.event.inputs.CREATE_SC == 'true' }}

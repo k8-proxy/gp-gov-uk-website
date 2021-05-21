@@ -27,13 +27,13 @@
       "tags": {
         "OS_Version": "Ubuntu-20.04",
         "Base_AMI_Name": "{{ .SourceAMIName }}",
-        "Github_Run_id": "{{user `github_sha`}}",
+        "Github_Run_id": "{{user `RUN_ID`}}",
         "Name": "{{user `vm_name`}}",
-        "CS_CK8S_API": "{{user `cs_api` }}",
+        "CS_CK8S_API": "{{user `CS_API` }}",
         "M_UI": "{{user `M_UI` }}",
-        "Filedrop_UI": "{{user `filedrop_ui`}}",
+        "FILEDROP_UI": "{{user `FILEDROP_UI`}}",
         "K8S_Flavour": "CK8",
-        "ICAP_Flavour": "{{user `icap_flavour`}}"
+        "ICAP_FLAVOUR": "{{user `ICAP_FLAVOUR`}}"
       },
       "run_tags": {
         "Name": "Packer Builder {{user `vm_name`}}",

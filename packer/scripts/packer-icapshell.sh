@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 source /home/ubuntu/scripts/.env
 if [ -f /home/ubuntu/scripts/update_partition_size.sh ]; then
   chmod +x /home/ubuntu/scripts/update_partition_size.sh
@@ -53,7 +54,7 @@ kubectl create -n icap-adaptation secret generic policyupdateservicesecret --fro
 kubectl create -n icap-adaptation secret generic transactionqueryservicesecret --from-literal=username=query-service --from-literal=password='long-password'
 kubectl create -n icap-adaptation secret generic rabbitmq-service-default-user --from-literal=username=guest --from-literal=password='guest'
 kubectl create -n icap-adaptation secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="" --docker-password="" --docker-email=""
-if [[ "$ICAP_FLAVOUR" == "classic" ]]; then
+if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
 	snap install yq
 	requestImage=$(yq eval '.imagestore.requestprocessing.tag' values.yaml)
 	docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
@@ -69,7 +70,6 @@ fi
 kubectl patch svc frontend-icap-lb -n icap-adaptation --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"},{"op":"replace","path":"/spec/ports/0/nodePort","value":1344},{"op":"replace","path":"/spec/ports/1/nodePort","value":1345}]'
 cd ..
 
-INSTALL_M_UI=${INSTALL_M_UI:-"false"}
 if [[ "${INSTALL_M_UI}" == "true" ]]; then
   mkdir -p /var/local/rancher/host/c/userstore
   cp -r default-user/* /var/local/rancher/host/c/userstore/
@@ -99,10 +99,6 @@ if [[ "${INSTALL_M_UI}" == "true" ]]; then
     --from-literal=SmtpSecureSocketOptions='http://management-ui:8080'
 
 fi
-
-INSTALL_CSAPI=${INSTALL_CSAPI:-"true"}
-INSTALL_FILEDROP_UI=${INSTALL_FILEDROP_UI:-"true"}
-CS_API_IMAGE=${CS_API_IMAGE:-glasswallsolutions/cs-k8s-api:latest}
 
 # Install Filedrop UI
 if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
@@ -179,7 +175,6 @@ maxretry = 5
 EOF
 systemctl restart fail2ban
 
-CREATE_OVA=${CREATE_OVA:-false}
 if [[ "$CREATE_OVA" == "true" ]]; then
   # switching to predictable network interfaces naming
   grep "$KERNEL_BOOT_LINE" /etc/default/grub >/dev/null || sed -Ei "s/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 $KERNEL_BOOT_LINE\"/g" /etc/default/grub

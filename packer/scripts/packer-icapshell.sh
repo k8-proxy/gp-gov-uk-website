@@ -53,7 +53,6 @@ cd adaptation
 kubectl create -n icap-adaptation secret generic policyupdateservicesecret --from-literal=username=policy-management --from-literal=password='long-password'
 kubectl create -n icap-adaptation secret generic transactionqueryservicesecret --from-literal=username=query-service --from-literal=password='long-password'
 kubectl create -n icap-adaptation secret generic rabbitmq-service-default-user --from-literal=username=guest --from-literal=password='guest'
-kubectl create -n icap-adaptation secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username="" --docker-password="" --docker-email=""
 if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
 	snap install yq
 	requestImage=$(yq eval '.imagestore.requestprocessing.tag' values.yaml)

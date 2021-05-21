@@ -113,7 +113,7 @@
         "GNUPGHOME={{ user `gnu_pgp_home` }}"
       ],
       "inline": [
-        "cd ../../compliantkubernetes-kubespray/",
+        "cd ../compliantkubernetes-kubespray/",
         "git submodule init",
         "git submodule update",
         "cd kubespray",
@@ -144,7 +144,7 @@
         "GNUPGHOME={{ user `gnu_pgp_home` }}"
       ],
       "inline": [
-        "cd ../../compliantkubernetes-apps",
+        "cd ../compliantkubernetes-apps",
         "./bin/ck8s ops kubectl sc apply -f ../setup/local-storage-pv-sc.yaml"
       ]
     },
@@ -167,7 +167,7 @@
         "GNUPGHOME={{ user `gnu_pgp_home` }}"
       ],
       "inline": [
-        "cd ../../compliantkubernetes-apps",
+        "cd ../compliantkubernetes-apps",
         "./bin/ck8s apply sc"
       ]
     },
@@ -178,7 +178,7 @@
         "GNUPGHOME={{ user `gnu_pgp_home` }}"
       ],
       "inline": [
-        "cd ../../compliantkubernetes-apps",
+        "cd ../compliantkubernetes-apps",
         "./bin/ck8s ops kubectl sc apply -f ../setup/node-port-service-cluster.yaml"
       ]
     },

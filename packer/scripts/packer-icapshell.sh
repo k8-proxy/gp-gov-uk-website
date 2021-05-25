@@ -138,35 +138,27 @@ spec:
       - path: /api
         pathType: Prefix
         backend:
-          service:
-            name: sow-rest-api
-            port: 
-              number: 80
+          serviceName: sow-rest-api
+          servicePort: 80
       - path: /swagger
         pathType: Prefix
         backend:
-          service:
-            name: sow-rest-api
-            port:
-              number: 80
+          serviceName: sow-rest-api
+          servicePort: 80
       - path: /Swg
         pathType: Prefix
         backend:
-          service:
-            name: sow-rest-api
-            port:
-              number: 80
+          serviceName: sow-rest-api
+          servicePort: 80
       - path: /openapi.json
         pathType: Prefix
         backend:
-          service:
-            name: sow-rest-api
-            port:
-              number: 80
+          serviceName: sow-rest-api
+          servicePort: 80
       - path: /
         pathType: Prefix
         backend:
-          name: "sow-rest-ui"
+          serviceName: sow-rest-api
           servicePort: 80
 {{- end -}}
 

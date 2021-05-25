@@ -18,6 +18,6 @@ done
 
 echo "Upload Completed !!!"
 
-BUCKET=$(cat ../ova-export.json | jq -r .S3Bucket)
+BUCKET=$(cat ova-export.json | jq -r .S3Bucket)
 OBJECT="$(aws s3 ls $BUCKET/vms/$VM_NAME/ | sort | tail -n 1 | awk '{print $4}')"
 aws s3 mv s3://${BUCKET}/vms/$VM_NAME/${OBJECT} s3://${BUCKET}/vms/$VM_NAME/${OVA_NAME}

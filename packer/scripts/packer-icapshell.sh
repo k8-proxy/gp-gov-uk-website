@@ -121,10 +121,28 @@ if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
 	ui_tag=$(yq eval '.sow-rest-ui.image.tag' kubernetes/values.yaml)
 	ui_registry=$(yq eval '.sow-rest-ui.image.registry' kubernetes/values.yaml)
 	ui_repo=$(yq eval '.sow-rest-ui.image.repository' kubernetes/values.yaml)
-	sudo docker pull $ui_registry/$ui_repo:$ui_tag
-	sudo docker tag $ui_registry/$ui_repo:$ui_tag localhost:30500/k8-rebuild-file-drop:$ui_tag
-	sudo docker push localhost:30500/k8-rebuild-file-drop:$ui_tag
+	docker pull $ui_registry/$ui_repo:$ui_tag
+	docker tag $ui_registry/$ui_repo:$ui_tag localhost:30500/k8-rebuild-file-drop:$ui_tag
+	docker push localhost:30500/k8-rebuild-file-drop:$ui_tag
 	rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
+  cat >kubernetes/templates/ingress.yaml <<EOF
+{{ if (eq .Values.nginx.service.type "ClusterIP") }}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: k8-rebuild
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          serviceName: "{{ .Release.Name }}-sow-rest"
+          servicePort: 80
+{{- end -}}
+
+EOF
 	sed -i 's/sow-rest-api/proxy-rest-api.icap-adaptation.svc.cluster.local:8080/g' kubernetes/values.yaml
 	# install helm charts
 	helm upgrade --install k8-rebuild --set nginx.service.type=ClusterIP \
@@ -134,10 +152,10 @@ fi
 # Install CS-API
 if [[ "${INSTALL_CSAPI}" == "true" ]]; then
   wget https://raw.githubusercontent.com/k8-proxy/cs-k8s-api/main/deployment.yaml
-  sudo docker pull $CS_API_IMAGE
+  docker pull $CS_API_IMAGE
   CS_IMAGE_VERSION=$(echo $CS_API_IMAGE | cut -d":" -f2)
-  sudo docker tag $CS_API_IMAGE localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
-  sudo docker push localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
+  docker tag $CS_API_IMAGE localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
+  docker push localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
   sed -i 's|glasswallsolutions/cs-k8s-api:.*|localhost:30500/cs-k8s-api:'$CS_IMAGE_VERSION'|' deployment.yaml
   kubectl apply -f deployment.yaml -n icap-adaptation
   kubectl patch svc proxy-rest-api -n icap-adaptation --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"},{"op":"replace","path":"/spec/ports/0/nodePort","value":8080}]'
@@ -171,7 +189,7 @@ if [[ "$CREATE_OVA" == "true" ]]; then
 
   # update grub
   update-grub
-  curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/master/install.sh | sudo sh -
+  curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/master/install.sh | sh -
   # installing the wizard
   install -T /home/ubuntu/scripts/cwizard.sh /usr/local/bin/wizard -m 0755
 

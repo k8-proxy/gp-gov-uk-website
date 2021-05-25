@@ -135,10 +135,38 @@ spec:
   rules:
   - http:
       paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: sow-rest-api
+            port: 
+              number: 80
+      - path: /swagger
+        pathType: Prefix
+        backend:
+          service:
+            name: sow-rest-api
+            port:
+              number: 80
+      - path: /Swg
+        pathType: Prefix
+        backend:
+          service:
+            name: sow-rest-api
+            port:
+              number: 80
+      - path: /openapi.json
+        pathType: Prefix
+        backend:
+          service:
+            name: sow-rest-api
+            port:
+              number: 80
       - path: /
         pathType: Prefix
         backend:
-          serviceName: "{{ .Release.Name }}-sow-rest"
+          name: "sow-rest-ui"
           servicePort: 80
 {{- end -}}
 

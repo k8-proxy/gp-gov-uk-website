@@ -17,15 +17,15 @@ on:
         default: "false"
         required: true
       INSTALL_CSAPI:
-        description: CS-API Required
+        description: Install GW Cloud REST API
         default: "true"
         required: true
       INSTALL_FILEDROP_UI:
-        description: Filedrop UI Required (CS-API must be True)
+        description: Install filedrop UI, this will install GW Cloud REST API too.
         default: "true"
         required: true    
       CS_API_IMAGE:
-        description: CS API Image (CS-API must be True)
+        description: GW Cloud REST (cs-k8s-api) API docker image
         default: glasswallsolutions/cs-k8s-api:latest
         required: true 
       CREATE_WC:

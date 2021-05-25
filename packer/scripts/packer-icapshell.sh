@@ -55,9 +55,11 @@ kubectl create -n icap-adaptation secret generic transactionqueryservicesecret -
 kubectl create -n icap-adaptation secret generic rabbitmq-service-default-user --from-literal=username=guest --from-literal=password='guest'
 if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
 	snap install yq
-	requestImage=$(yq eval '.imagestore.requestprocessing.tag' values.yaml)
-	docker pull glasswallsolutions/icap-request-processing:$requestImage
-	docker tag glasswallsolutions/icap-request-processing:$requestImage localhost:30500/icap-request-processing:$requestImage
+	requestImage=$(yq eval '.imagestore.requestprocessing.tag' custom-values.yaml)
+	requestRepo=$(yq eval '.imagestore.requestprocessing.repository' custom-values.yaml)
+	docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+	docker pull $requestRepo:$requestImage
+	docker tag $requestRepo:$requestImage localhost:30500/icap-request-processing:$requestImage
 	docker push localhost:30500/icap-request-processing:$requestImage
 	helm upgrade adaptation --values custom-values.yaml --install . --namespace icap-adaptation  --set imagestore.requestprocessing.registry='localhost:30500/' \
 	--set imagestore.requestprocessing.repository='icap-request-processing'
@@ -114,28 +116,21 @@ fi
 # Install Filedrop UI
 if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
   INSTALL_CSAPI="true"
-  git clone https://github.com/k8-proxy/k8-rebuild.git --branch ck8s-filedrop --recursive && cd k8-rebuild && git submodule update --init --recursive && git submodule foreach git pull origin main && cd k8-rebuild-rest-api && git pull origin main && cd libs/ && git pull origin master && cd ../../
-  docker build k8-rebuild-file-drop/app -f k8-rebuild-file-drop/app/Dockerfile -t localhost:30500/k8-rebuild-file-drop
-  docker push localhost:30500/k8-rebuild-file-drop
-  rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
-  cat >>kubernetes/values.yaml <<EOF
-sow-rest-ui:
-image:
-	registry: localhost:30500
-	repository: k8-rebuild-file-drop
-	imagePullPolicy: Never
-	tag: latest
-EOF
-  helm upgrade --install k8-rebuild \
-    --set nginx.service.type=ClusterIP \
-    --atomic kubernetes/
+  git clone https://github.com/k8-proxy/k8-rebuild.git && pushd k8-rebuild
+	# build images
+	ui_tag=$(yq eval '.sow-rest-ui.image.tag' kubernetes/values.yaml)
+	ui_registry=$(yq eval '.sow-rest-ui.image.registry' kubernetes/values.yaml)
+	ui_repo=$(yq eval '.sow-rest-ui.image.repository' kubernetes/values.yaml)
+	sudo docker pull $ui_registry/$ui_repo:$ui_tag
+	sudo docker tag $ui_registry/$ui_repo:$ui_tag localhost:30500/k8-rebuild-file-drop:$ui_tag
+	sudo docker push localhost:30500/k8-rebuild-file-drop:$ui_tag
+	rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
+	sed -i 's/sow-rest-api/proxy-rest-api.icap-adaptation.svc.cluster.local:8080/g' kubernetes/values.yaml
+	# install helm charts
+	helm upgrade --install k8-rebuild --set nginx.service.type=ClusterIP \
+	--set sow-rest-ui.image.registry=localhost:30500 \
+	--atomic kubernetes/
 fi
-
-
-
-
-
-
 # Install CS-API
 if [[ "${INSTALL_CSAPI}" == "true" ]]; then
   wget https://raw.githubusercontent.com/k8-proxy/cs-k8s-api/main/deployment.yaml

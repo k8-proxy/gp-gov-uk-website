@@ -125,6 +125,8 @@ if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
 	docker tag $ui_registry/$ui_repo:$ui_tag localhost:30500/k8-rebuild-file-drop:$ui_tag
 	docker push localhost:30500/k8-rebuild-file-drop:$ui_tag
 	rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
+  rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
+	rm -rf kubernetes/charts/nginx-8.2.0.tgz
   cat >kubernetes/templates/ingress.yaml <<EOF
 {{ if (eq .Values.nginx.service.type "ClusterIP") }}
 apiVersion: extensions/v1beta1
@@ -138,23 +140,23 @@ spec:
       - path: /api
         pathType: Prefix
         backend:
-          serviceName: sow-rest-api
-          servicePort: 80
+          serviceName: proxy-rest-api
+          servicePort: 8080
       - path: /swagger
         pathType: Prefix
         backend:
-          serviceName: sow-rest-api
-          servicePort: 80
+          serviceName: proxy-rest-api
+          servicePort: 8080
       - path: /Swg
         pathType: Prefix
         backend:
-          serviceName: sow-rest-api
-          servicePort: 80
+          serviceName: proxy-rest-api
+          servicePort: 8080
       - path: /openapi.json
         pathType: Prefix
         backend:
-          serviceName: sow-rest-api
-          servicePort: 80
+          serviceName: proxy-rest-api
+          servicePort: 8080
       - path: /
         pathType: Prefix
         backend:

@@ -179,7 +179,7 @@ EOF
 	# install helm charts
 	helm upgrade --install k8-rebuild -n icap-adaptation --set nginx.service.type=ClusterIP \
 	--set sow-rest-ui.image.registry=localhost:30500 \
-	--atomic kubernetes --timeout 600/ 
+	--atomic kubernetes --timeout 600 / 
 fi
 
 docker logout

@@ -171,7 +171,7 @@ spec:
       - path: /
         pathType: Prefix
         backend:
-          serviceName: sow-rest-api
+          serviceName: sow-rest-ui
           servicePort: 80
 {{- end -}}
 

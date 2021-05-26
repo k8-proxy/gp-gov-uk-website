@@ -7,6 +7,7 @@
       "spot_instance_types": ["t2.xlarge", "t3.xlarge"],
       "spot_price": "auto",
       "associate_public_ip_address": true,
+      "ssh_interface": "public_ip",
       "region": "{{user `region`}}",
       "secret_key": "{{user `aws_secret_key`}}",
       "user_data_file": "{{user `user_data_file`}}",

@@ -148,6 +148,26 @@ spec:
   rules:
   - http:
       paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          serviceName: proxy-rest-api
+          servicePort: 8080
+      - path: /swagger
+        pathType: Prefix
+        backend:
+          serviceName: proxy-rest-api
+          servicePort: 8080
+      - path: /Swg
+        pathType: Prefix
+        backend:
+          serviceName: proxy-rest-api
+          servicePort: 8080
+      - path: /openapi.json
+        pathType: Prefix
+        backend:
+          serviceName: proxy-rest-api
+          servicePort: 8080
       - path: /
         pathType: Prefix
         backend:

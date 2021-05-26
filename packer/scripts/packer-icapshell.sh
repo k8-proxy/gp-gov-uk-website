@@ -74,9 +74,9 @@ if [[ "${ICAP_FLAVOUR}" == "golang" ]]; then
 	kubectl create -n icap-adaptation secret generic minio-credentials --from-literal=username='minio' --from-literal=password=$MINIO_SECRET
 	git clone https://github.com/k8-proxy/go-k8s-infra.git -b develop && cd go-k8s-infra
 	kubectl -n icap-adaptation scale --replicas=0 deployment/adaptation-service
-	pushd services
+	cd services
 	helm upgrade servicesv2 --install . --namespace icap-adaptation
-	popd
+	cd ..
 fi
 
 
@@ -128,7 +128,7 @@ fi
 # Install Filedrop UI
 if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
   INSTALL_CSAPI="true"
-  git clone https://github.com/k8-proxy/k8-rebuild.git && pushd k8-rebuild
+  git clone https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
 	# build images
 	ui_tag=$(yq eval '.sow-rest-ui.image.tag' kubernetes/values.yaml)
 	ui_registry=$(yq eval '.sow-rest-ui.image.registry' kubernetes/values.yaml)

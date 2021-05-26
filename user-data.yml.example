@@ -17,7 +17,7 @@ write_files:
             name: lo
           dhcp4: false
           addresses:
-          - 172.17.0.100/32
+          - 10.28.0.1/16
 - path: /etc/netplan/10-user-network.yaml
   content: |
     network:

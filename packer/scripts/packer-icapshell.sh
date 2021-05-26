@@ -113,6 +113,18 @@ if [[ "${INSTALL_M_UI}" == "true" ]]; then
 
 fi
 
+# Install CS-API
+if [[ "${INSTALL_CSAPI}" == "true" ]]; then
+  wget https://raw.githubusercontent.com/k8-proxy/cs-k8s-api/main/deployment.yaml
+  docker pull $CS_API_IMAGE
+  CS_IMAGE_VERSION=$(echo $CS_API_IMAGE | cut -d":" -f2)
+  docker tag $CS_API_IMAGE localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
+  docker push localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
+  sed -i 's|glasswallsolutions/cs-k8s-api:.*|localhost:30500/cs-k8s-api:'$CS_IMAGE_VERSION'|' deployment.yaml
+  kubectl apply -f deployment.yaml -n icap-adaptation
+  kubectl patch svc proxy-rest-api -n icap-adaptation --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"},{"op":"replace","path":"/spec/ports/0/nodePort","value":8080}]'
+fi
+
 # Install Filedrop UI
 if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
   INSTALL_CSAPI="true"
@@ -124,7 +136,6 @@ if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
 	docker pull $ui_registry/$ui_repo:$ui_tag
 	docker tag $ui_registry/$ui_repo:$ui_tag localhost:30500/k8-rebuild-file-drop:$ui_tag
 	docker push localhost:30500/k8-rebuild-file-drop:$ui_tag
-	rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
   rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
 	rm -rf kubernetes/charts/nginx-8.2.0.tgz
   cat >kubernetes/templates/ingress.yaml <<EOF
@@ -165,23 +176,12 @@ spec:
 {{- end -}}
 
 EOF
-	sed -i 's/sow-rest-api/proxy-rest-api.icap-adaptation.svc.cluster.local:8080/g' kubernetes/values.yaml
 	# install helm charts
-	helm upgrade --install k8-rebuild --set nginx.service.type=ClusterIP \
+	helm upgrade --install k8-rebuild -n icap-adaptation --set nginx.service.type=ClusterIP \
 	--set sow-rest-ui.image.registry=localhost:30500 \
 	--atomic kubernetes/
 fi
-# Install CS-API
-if [[ "${INSTALL_CSAPI}" == "true" ]]; then
-  wget https://raw.githubusercontent.com/k8-proxy/cs-k8s-api/main/deployment.yaml
-  docker pull $CS_API_IMAGE
-  CS_IMAGE_VERSION=$(echo $CS_API_IMAGE | cut -d":" -f2)
-  docker tag $CS_API_IMAGE localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
-  docker push localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
-  sed -i 's|glasswallsolutions/cs-k8s-api:.*|localhost:30500/cs-k8s-api:'$CS_IMAGE_VERSION'|' deployment.yaml
-  kubectl apply -f deployment.yaml -n icap-adaptation
-  kubectl patch svc proxy-rest-api -n icap-adaptation --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"},{"op":"replace","path":"/spec/ports/0/nodePort","value":8080}]'
-fi
+
 docker logout
 # defining vars
 DEBIAN_FRONTEND=noninteractive

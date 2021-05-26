@@ -4,7 +4,9 @@
     {
       "access_key": "{{user `aws_access_key`}}",
       "ami_name": "{{user `vm_name`}}-{{user `RUN_ID`}}",
-      "instance_type": "t3.2xlarge",
+      "spot_instance_types": ["t2.xlarge", "t3.xlarge"],
+      "spot_price": "auto",
+      "associate_public_ip_address": true,
       "region": "{{user `region`}}",
       "secret_key": "{{user `aws_secret_key`}}",
       "user_data_file": "{{user `user_data_file`}}",

@@ -2,7 +2,7 @@
 # ## different ip than the default iface
 # ## We should set etcd_member_name for etcd cluster. The node that is not a etcd member do not need to set the value, or can set the empty string value.
 [all]
-ip-{PRIVATE_IP}.eu-west-1.compute.internal ansible_user=ubuntu ansible_host={PUBLIC_IP} ip=10.28.0.1# Master 1
+ip-{PRIVATE_IP}.eu-west-1.compute.internal ansible_user=ubuntu ansible_host={PUBLIC_IP} ip=127.0.0.1# Master 1
 
 # ## configure a bastion host if your nodes are not directly reachable
 # bastion ansible_host=x.x.x.x ansible_user=some_user

@@ -67,16 +67,25 @@ fi
 
 if [[ "${ICAP_FLAVOUR}" == "golang" ]]; then
 	helm upgrade adaptation --values custom-values.yaml --install . --namespace icap-adaptation
+	popd
 	# Install minio
 	kubectl create ns minio
+	kubectl create ns jaeger
 	helm repo add minio https://helm.min.io/
 	helm install -n minio --set accessKey=minio,secretKey=$MINIO_SECRET,buckets[0].name=sourcefiles,buckets[0].policy=none,buckets[0].purge=false,buckets[1].name=cleanfiles,buckets[1].policy=none,buckets[1].purge=false,fullnameOverride=minio-server,persistence.enabled=false minio/minio --generate-name
 	kubectl create -n icap-adaptation secret generic minio-credentials --from-literal=username='minio' --from-literal=password=$MINIO_SECRET
-	git clone https://github.com/k8-proxy/go-k8s-infra.git -b develop && cd go-k8s-infra
+
+	# deploy new Go services
+	git clone https://github.com/k8-proxy/go-k8s-infra.git -b develop && pushd go-k8s-infra
+
+	# Scale the existing adaptation service to 0
 	kubectl -n icap-adaptation scale --replicas=0 deployment/adaptation-service
-	cd services
-	helm upgrade servicesv2 --install . --namespace icap-adaptation
-	cd ..
+	kubectl -n icap-adaptation delete cronjob pod-janitor
+	# Install jaeger-agent
+	kubectl apply -f jaeger-agent/jaeger.yaml
+	# Apply helm chart to create the services
+	helm upgrade servicesv2 --install services --namespace icap-adaptation
+	popd
 fi
 
 

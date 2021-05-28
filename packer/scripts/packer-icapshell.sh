@@ -50,11 +50,11 @@ cp /tmp/icap-infrastructure-sow/administration/values.yaml administration/
 cp /tmp/icap-infrastructure-sow/ncfs/values.yaml ncfs/
 
 cd adaptation
+snap install yq
 kubectl create -n icap-adaptation secret generic policyupdateservicesecret --from-literal=username=policy-management --from-literal=password='long-password'
 kubectl create -n icap-adaptation secret generic transactionqueryservicesecret --from-literal=username=query-service --from-literal=password='long-password'
 kubectl create -n icap-adaptation secret generic rabbitmq-service-default-user --from-literal=username=guest --from-literal=password='guest'
 if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
-	snap install yq
 	requestImage=$(yq eval '.imagestore.requestprocessing.tag' custom-values.yaml)
 	requestRepo=$(yq eval '.imagestore.requestprocessing.repository' custom-values.yaml)
 	docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD

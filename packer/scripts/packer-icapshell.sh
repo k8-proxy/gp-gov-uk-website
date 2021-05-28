@@ -67,7 +67,6 @@ fi
 
 if [[ "${ICAP_FLAVOUR}" == "golang" ]]; then
 	helm upgrade adaptation --values custom-values.yaml --install . --namespace icap-adaptation
-	popd
 	# Install minio
 	kubectl create ns minio
 	kubectl create ns jaeger

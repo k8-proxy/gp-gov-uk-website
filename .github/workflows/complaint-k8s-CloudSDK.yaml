@@ -169,6 +169,7 @@ jobs:
         INSTALL_FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }}
         INSTALL_CSAPI=${{ github.event.inputs.INSTALL_CSAPI }}
         ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
+        MINIO_SECRET=${{ secrets.MINIO_SECRET }}
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state

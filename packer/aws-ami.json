@@ -185,7 +185,6 @@
     {
       "type": "shell",
       "inline": [
-        "ls -laR /home/ubuntu",
         "chmod +x /home/ubuntu/scripts/setSshPasswd.sh",
         "sudo /home/ubuntu/scripts/setSshPasswd.sh"
       ]
@@ -195,6 +194,13 @@
       "inline": [
         "chmod +x /home/ubuntu/scripts/packer-icapshell.sh",
         "sudo /home/ubuntu/scripts/packer-icapshell.sh"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "mv /home/ubuntu/scripts/setupscCluster.sh /home/ubuntu/setupscCluster.sh",
+        "mv /home/ubuntu/scripts/wc-coredns-configmap.yml /home/ubuntu/wc-coredns-configmap.yml"
       ]
     },
     {

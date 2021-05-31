@@ -3,7 +3,6 @@ monitoring_username=$(cat /home/ubuntu/monitoring-username.txt)
 monitoring_password=$(cat /home/ubuntu/monitoring-password.txt)
 logging_username=$(cat /home/ubuntu/logging-username.txt)
 service_cluster=$(cat /home/ubuntu/service-cluster.txt)
-wget https://raw.githubusercontent.com/k8-proxy/vmware-scripts/csapi-ck8-filedrop/packer/wc-coredns-configmap.yml -O /home/ubuntu/wc-coredns-configmap.yml
 sed -i "s|8.8.8.8|$(cat /home/ubuntu/service-cluster-ip.txt)|" /home/ubuntu/wc-coredns-configmap.yml
 kubectl apply -f /home/ubuntu/wc-coredns-configmap.yml
 kubectl delete pod --namespace kube-system --selector k8s-app=kube-dns

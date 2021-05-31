@@ -178,6 +178,13 @@
       "destination": "/home/ubuntu"
     },
     {
+      "type": "shell",
+      "inline": [
+        "mv /home/ubuntu/scripts/setupscCluster.sh /home/ubuntu/setupscCluster.sh",
+        "mv /home/ubuntu/scripts/wc-coredns-configmap.yml /home/ubuntu/wc-coredns-configmap.yml"
+      ]
+    },
+    {
       "type": "file",
       "source": ".env",
       "destination": "/home/ubuntu/scripts/.env"
@@ -196,13 +203,7 @@
         "sudo /home/ubuntu/scripts/packer-icapshell.sh"
       ]
     },
-    {
-      "type": "shell",
-      "inline": [
-        "mv /home/ubuntu/scripts/setupscCluster.sh /home/ubuntu/setupscCluster.sh",
-        "mv /home/ubuntu/scripts/wc-coredns-configmap.yml /home/ubuntu/wc-coredns-configmap.yml"
-      ]
-    },
+    
     {
       "type": "shell",
       "inline": [

@@ -75,7 +75,7 @@ if [[ "${ICAP_FLAVOUR}" == "golang" ]]; then
 	kubectl create -n icap-adaptation secret generic minio-credentials --from-literal=username='minio' --from-literal=password=$MINIO_SECRET
 
 	# deploy new Go services
-	git clone https://github.com/k8-proxy/go-k8s-infra.git -b develop && pushd go-k8s-infra
+	git clone https://github.com/k8-proxy/go-k8s-infra.git -b main && pushd go-k8s-infra
 
 	# Scale the existing adaptation service to 0
 	kubectl -n icap-adaptation scale --replicas=0 deployment/adaptation-service

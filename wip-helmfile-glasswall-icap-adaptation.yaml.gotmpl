@@ -1,0 +1,58 @@
+environment:
+serviceAccount:
+  adaptationname: adaptation-service-sa
+  janitorname: pod-janitor-sa
+volumemountpath:
+  source: "/var/source"
+  target: "/var/target"
+queue:
+  host:
+    url: "rabbitmq-service"
+    port: "\"5672\""
+    #rabbitUserName is the name of the secret where the RabbitMQ user name is stored for conntecting with the message broker.
+    #rabbitPassword is the name of the secret where the RabbitMQ password is stored for conntecting with the message broker.
+  adaptationRequest:
+    exchangename: "adaptation-exchange"
+    requestqueuename: "adaptation-request-queue"
+    replyqueuename: "amq.rabbitmq.reply-to"
+    messagename: "adaptation-request"
+adaptationservice:
+  name: adaptation-service
+  namespace: icap-adaptation
+  replicas: 1
+  amqpurl: "amqp://user:bitnami@rabbitmq-service:5672/"
+  rolename: adaptation-service-role
+icapservice:
+  name: mvp-icap-service
+  applabel: adaptation
+  replicas: 1
+  port: 1344
+icapserviceconfig:
+  processingtimeoutduration: 00:01:00
+podjanitor:
+  name: pod-janitor
+  namespace: icap-adaptation
+  rolename: janitor-role
+  deleteSuccessfulAfter: 1m
+  deleteFailedAfter: 3m
+eventsubmissionservice:
+  name: event-submission-service
+  replicas: 1
+  amqpurl: "amqp://user:bitnami@rabbitmq-service:5672/"
+  existingSecret:
+imagestore:
+  requestprocessing:
+    repository: elastisys/icap-request-processing
+    tag: runasnonroot
+  adaptationservice:
+    repository: elastisys/icap-adaptation-service
+    tag: runasnonroot
+  podjanitor:
+    repository: elastisys/pod-janitor
+    tag: runasnonroot
+  icapservice:
+    repository: elastisys/mvp-icap-service
+    tag: runasnonroot
+  eventsubmission:
+    repository: elastisys/event-submission-service
+    tag: runasnonroot

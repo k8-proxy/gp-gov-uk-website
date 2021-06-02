@@ -170,6 +170,7 @@ jobs:
         INSTALL_CSAPI=${{ github.event.inputs.INSTALL_CSAPI }}
         ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
         MINIO_SECRET=${{ secrets.MINIO_SECRET }}
+        CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state

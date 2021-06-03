@@ -10,7 +10,7 @@ Initial configuration
 #nowe haslo dla uzytkownika glasswall
 /usr/local/bin/wizard
 
-systemctl disable initconfig
+systemctl disable initconfigwizard
 
 reboot
 exit

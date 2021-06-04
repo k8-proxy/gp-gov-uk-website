@@ -123,71 +123,16 @@ fi
 
 # Install CS-API
 if [[ "${INSTALL_CSAPI}" == "true" ]]; then
-  wget https://raw.githubusercontent.com/k8-proxy/cs-k8s-api/main/deployment.yaml
-  docker pull $CS_API_IMAGE
-  CS_IMAGE_VERSION=$(echo $CS_API_IMAGE | cut -d":" -f2)
-  docker tag $CS_API_IMAGE localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
-  docker push localhost:30500/cs-k8s-api:$CS_IMAGE_VERSION
-  sed -i 's|glasswallsolutions/cs-k8s-api:.*|localhost:30500/cs-k8s-api:'$CS_IMAGE_VERSION'|' deployment.yaml
-  kubectl apply -f deployment.yaml -n icap-adaptation
-  kubectl patch svc proxy-rest-api -n icap-adaptation --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"},{"op":"replace","path":"/spec/ports/0/nodePort","value":8080}]'
+  git clone --branch helm_chart https://github.com/k8-proxy/cs-k8s-api
+  helm upgrade --install -n icap-adaptation rebuild-api --set k8s_version=1.18 infra/kubernetes/chart  --atomic
 fi
 
 # Install Filedrop UI
 if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
   INSTALL_CSAPI="true"
-  git clone https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
-	# build images
-	ui_tag=$(yq eval '.sow-rest-ui.image.tag' kubernetes/values.yaml)
-	ui_registry=$(yq eval '.sow-rest-ui.image.registry' kubernetes/values.yaml)
-	ui_repo=$(yq eval '.sow-rest-ui.image.repository' kubernetes/values.yaml)
-	docker pull $ui_registry/$ui_repo:$ui_tag
-	docker tag $ui_registry/$ui_repo:$ui_tag localhost:30500/k8-rebuild-file-drop:$ui_tag
-	docker push localhost:30500/k8-rebuild-file-drop:$ui_tag
-  rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
-	rm -rf kubernetes/charts/nginx-8.2.0.tgz
-  cat >kubernetes/templates/ingress.yaml <<EOF
-{{ if (eq .Values.nginx.service.type "ClusterIP") }}
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: k8-rebuild
-spec:
-  rules:
-  - http:
-      paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          serviceName: proxy-rest-api
-          servicePort: 8080
-      - path: /swagger
-        pathType: Prefix
-        backend:
-          serviceName: proxy-rest-api
-          servicePort: 8080
-      - path: /Swg
-        pathType: Prefix
-        backend:
-          serviceName: proxy-rest-api
-          servicePort: 8080
-      - path: /openapi.json
-        pathType: Prefix
-        backend:
-          serviceName: proxy-rest-api
-          servicePort: 8080
-      - path: /
-        pathType: Prefix
-        backend:
-          serviceName: sow-rest-ui
-          servicePort: 80
-{{- end -}}
-
-EOF
+  git clone --branch update_helm_charts https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
 	# install helm charts
-	helm upgrade --install k8-rebuild -n icap-adaptation --timeout 10m --set nginx.service.type=ClusterIP \
-	--set sow-rest-ui.image.registry=localhost:30500 \
-	--atomic kubernetes/ 
+	helm upgrade --install k8-rebuild -n icap-adaptation --timeout 10m --atomic kubernetes/ 
 fi
 
 docker logout

@@ -123,7 +123,7 @@ fi
 
 # Install CS-API
 if [[ "${INSTALL_CSAPI}" == "true" ]]; then
-  git clone --branch helm_chart https://github.com/k8-proxy/cs-k8s-api
+  git clone --branch helm_chart https://github.com/k8-proxy/cs-k8s-api && cd cs-k8s-api
   helm upgrade --install -n icap-adaptation rebuild-api --set k8s_version=1.18 infra/kubernetes/chart  --atomic
 fi
 
@@ -132,7 +132,7 @@ if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
   INSTALL_CSAPI="true"
   git clone --branch update_helm_charts https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
 	# install helm charts
-	helm upgrade --install k8-rebuild -n icap-adaptation --timeout 10m --atomic kubernetes/ 
+	helm upgrade --install k8-rebuild -n icap-adaptation --timeout 10m --set nginx.service.type=ClusterIP --atomic kubernetes/ 
 fi
 
 docker logout

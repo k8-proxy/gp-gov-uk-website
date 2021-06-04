@@ -75,7 +75,7 @@ write_files:
     chown -R 1000:1000 /mnt/disks/
 
     export KUBECONFIG=/etc/kubernetes/admin.conf
-    wget https://raw.githubusercontent.com/k8-proxy/k8s-compliant-kubernetes/ck8-main/packer/scripts/wc-coredns-configmap.yml -o /home/ubuntu/wc-coredns-configmap.yml
+    wget https://raw.githubusercontent.com/k8-proxy/k8s-compliant-kubernetes/ck8-main/packer/scripts/wc-coredns-configmap.yml -O /home/ubuntu/wc-coredns-configmap.yml
     sed -i "s|8.8.8.8|$service_cluster_ip|" /home/ubuntu/wc-coredns-configmap.yml
     kubectl apply -f /home/ubuntu/wc-coredns-configmap.yml
     kubectl delete pod --namespace kube-system --selector k8s-app=kube-dns

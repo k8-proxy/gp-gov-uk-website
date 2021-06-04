@@ -130,7 +130,7 @@ fi
 # Install Filedrop UI
 if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
   INSTALL_CSAPI="true"
-  git clone --branch update_helm_charts https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
+  git clone https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
   rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
 	rm -rf kubernetes/charts/nginx-8.2.0.tgz
 	# install helm charts

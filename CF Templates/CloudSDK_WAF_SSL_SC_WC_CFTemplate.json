@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Cloudformation template of creating icap servers under Load balancer",
+    "Description": "CF Template with Security hardening and WAF",
     "Parameters": {
         "WorkloadClusterInstanceCount": {
             "Type": "Number",

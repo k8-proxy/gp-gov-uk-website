@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Cloudformation template of creating icap servers under Load balancer",
+    "Description": "CF template for creating new WC and integrate with existing SC",
     "Parameters": {
         "WorkloadClusterInstanceCount": {
             "Type": "Number",
@@ -22,26 +22,12 @@
             "Type": "AWS::EC2::Image::Id",
             "Description": "Enter AMI ID"
         },
-        "ServiceClusterAmiId": {
-            "Type": "AWS::EC2::Image::Id",
-            "Description": "Enter AMI ID"
-        },
         "WorkloadClusterInstanceSize": {
             "Type": "String",
             "Default": "t3.2xlarge",
             "Description": "Enter size of an instance"
         },
-        "ServiceClusterInstanceSize": {
-            "Type": "String",
-            "Default": "t3.2xlarge",
-            "Description": "Enter size of an instance"
-        },
         "WorkloadClusterKeyName": {
-            "Type": "AWS::EC2::KeyPair::KeyName",
-            "MinLength": "1",
-            "Description": "Select Key Pair used for the SSH access"
-        },
-        "ServiceClusterKeyName": {
             "Type": "AWS::EC2::KeyPair::KeyName",
             "MinLength": "1",
             "Description": "Select Key Pair used for the SSH access"
@@ -52,13 +38,14 @@
             "Default": "64",
             "MinValue": "20"
         },
-        "ServiceClusterEc2RootVolumeSize": {
-            "Description": "Enter the  EC2 root volume size",
-            "Type": "Number",
-            "Default": "200",
-            "MinValue": "20"
+        "ServiceClusterIP":{
+            "Type": "String",
+            "Description": "IP Address of existing Service Cluster"
+        },
+        "GWSSLCertificate":{
+            "Type": "String",
+            "Description": "ARN of ACM Certificate for SSL"
         }
-        
     },
     "Outputs": {
         "LoadBalancerDNSName": {
@@ -69,16 +56,7 @@
                     "DNSName"
                 ]
             }
-        },
-        "ServiceClusterIP": {
-            "Description": "The IP address of Service Cluster",
-            "Value": {
-                "Fn::GetAtt": [
-                    "CK8sServiceCluster",
-                    "PublicIp"
-                ]
-            }
-        }
+        }       
     },
     "Resources": {
         "LBVPC": {
@@ -272,58 +250,6 @@
                 }
             }
         },
-        "ServiceClusterInstanceSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
-            "Properties": {
-                "VpcId": {
-                    "Ref": "LBVPC"
-                },
-                "GroupDescription": "Incoming connections for Icap servers from LB",
-                "SecurityGroupIngress": [
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "3000",
-                        "ToPort": "3000",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "22",
-                        "ToPort": "22",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "5601",
-                        "ToPort": "5601",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "31829",
-                        "ToPort": "31829",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "8080",
-                        "ToPort": "8080",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "443",
-                        "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
-                    }
-                ]
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "90802a6b-319e-487f-a346-7e51dfa4d5cd"
-                }
-            }
-        },
         "IcapLB": {
             "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
             "Properties": {
@@ -396,31 +322,15 @@
                 "LoadBalancerArn": {
                     "Ref": "IcapLB"
                 },
-                "Port": 8080,
-                "Protocol": "HTTP"
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "b440546a-f676-4de5-8f04-8db0a78862cc"
-                }
-            }
-        },
-        "IcapLBListener80": {
-            "Type": "AWS::ElasticLoadBalancingV2::Listener",
-            "Properties": {
-                "DefaultActions": [
+                "Certificates": [
                     {
-                        "Type": "forward",
-                        "TargetGroupArn": {
-                            "Ref": "IcapLBTargetGroup80"
+                        "CertificateArn": {
+                            "Ref": "GWSSLCertificate"
                         }
                     }
                 ],
-                "LoadBalancerArn": {
-                    "Ref": "IcapLB"
-                },
-                "Port": 80,
-                "Protocol": "HTTP"
+                "Port": 8080,
+                "Protocol": "HTTPS"
             },
             "Metadata": {
                 "AWS::CloudFormation::Designer": {
@@ -435,15 +345,22 @@
                     {
                         "Type": "forward",
                         "TargetGroupArn": {
-                            "Ref": "IcapLBTargetGroup443"
+                            "Ref": "IcapLBTargetGroup80"
                         }
                     }
                 ],
                 "LoadBalancerArn": {
                     "Ref": "IcapLB"
                 },
+                "Certificates": [
+                    {
+                        "CertificateArn": {
+                            "Ref": "GWSSLCertificate"
+                        }
+                    }
+                ],
                 "Port": 443,
-                "Protocol": "HTTP"
+                "Protocol": "HTTPS"
             },
             "Metadata": {
                 "AWS::CloudFormation::Designer": {
@@ -573,67 +490,6 @@
                 }
             }
         },
-        "IcapLBTargetGroup443": {
-            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-            "Properties": {
-                "Name": {
-                    "Fn::Join": [
-                        "-",
-                        [
-                            "TG443",
-                            {
-                                "Ref": "AWS::StackName"
-                            }
-                        ]
-                    ]
-                },
-                "HealthCheckEnabled": true,
-                "HealthCheckIntervalSeconds": "30",
-                "HealthCheckPath": "/api/Health",
-                "HealthCheckPort": 8080,
-                "Port": 443,
-                "HealthCheckProtocol": "HTTP",
-                "HealthyThresholdCount": 2,
-                "UnhealthyThresholdCount": 2,
-                "Protocol": "HTTP",
-                "VpcId": {
-                    "Ref": "LBVPC"
-                },
-                "TargetGroupAttributes": [
-                    {
-                        "Key": "deregistration_delay.timeout_seconds",
-                        "Value": 60
-                    }
-                ],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": {
-                            "Fn::Join": [
-                                "-",
-                                [
-                                    "TG8080",
-                                    {
-                                        "Ref": "AWS::StackName"
-                                    }
-                                ]
-                            ]
-                        }
-                    },
-                    {
-                        "Key": "CFStack",
-                        "Value": {
-                            "Ref": "AWS::StackId"
-                        }
-                    }
-                ]
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "d5a47980-ca87-44cf-a758-19389e29056c"
-                }
-            }
-        },
         "ASGLaunchConfig": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Properties": {
@@ -702,7 +558,7 @@
                                 "  domain: default.compliantkuberetes\n",
                                 "  service-cluster-ip: ",
                                 {
-                                    "Fn::GetAtt":[ "CK8sServiceCluster" ,"PublicIp"]
+                                    "Ref": "ServiceClusterIP"
                                 },
                                 "\n",
                                 "  service-cluster: ops.default.compliantkuberetes\n"
@@ -746,9 +602,6 @@
                     },
                     {
                         "Ref": "IcapLBTargetGroup80"
-                    },
-                    {
-                        "Ref": "IcapLBTargetGroup443"
                     }
                 ],
                 "Tags": [
@@ -802,128 +655,6 @@
                 }
             }
         },
-        "CK8sServiceCluster": {
-            "Type": "AWS::EC2::Instance",
-            "Properties": {
-                "InstanceType": {
-                    "Ref": "ServiceClusterInstanceSize"
-                },
-                "NetworkInterfaces": [
-                    {
-                        "AssociatePublicIpAddress": "true",
-                        "DeviceIndex": "0",
-                        "GroupSet": [
-                            {
-                                "Ref": "ServiceClusterInstanceSecurityGroup"
-                            }
-                        ],
-                        "SubnetId": {
-                            "Ref": "Subnet"
-                        }
-                    }
-                ],
-                "ImageId": {
-                    "Ref": "ServiceClusterAmiId"
-                },
-                "KeyName": {
-                    "Ref": "ServiceClusterKeyName"
-                },
-                "BlockDeviceMappings": [
-                    {
-                        "DeviceName": "/dev/sda1",
-                        "Ebs": {
-                            "DeleteOnTermination": "true",
-                            "VolumeSize": {
-                                "Ref": "ServiceClusterEc2RootVolumeSize"
-                            }
-                        }
-                    }
-                ],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": {
-                            "Fn::Join": [
-                                "-",
-                                [
-                                    "ck8-SC",
-                                    {
-                                        "Ref": "AWS::StackName"
-                                    }
-                                ]
-                            ]
-                        }
-                    },
-                    {
-                        "Key": "Owner",
-                        "Value": "Glaswall"
-                    },
-                    {
-                        "Key": "Delete",
-                        "Value": "No"
-                    },
-                    {
-                        "Key": "Team",
-                        "Value": "Glasswall"
-                    },
-                    {
-                        "Key": "Scope",
-                        "Value": "k8s-compliant-kubernetes"
-                    },
-                    {
-                        "Key": "CFStack",
-                        "Value": {
-                            "Ref": "AWS::StackId"
-                        }
-                    }
-                ],
-                "UserData": {
-                    "Fn::Base64": {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "#cloud-config\n",
-                                "\n",
-                                "runcmd:\n",
-                                "  - sudo /usr/local/bin/cfn-signal -e $? ",
-                                "   --stack ",
-                                {
-                                    "Ref": "AWS::StackName"
-                                },
-                                "   --resource WebServerGroup",
-                                "   --region ",
-                                {
-                                    "Ref": "AWS::Region"
-                                },
-                                "\n\n",
-                                "  monitoring:\n",
-                                "    username: wcWriter\n",
-                                "    password: ",
-                                {
-                                    "Ref": "MonitoringPassword"
-                                },
-                                "\n",
-                                "  logging:\n",
-                                "    username: fluentd\n",
-                                "    password: ",
-                                {
-                                    "Ref": "LoggingPassword"
-                                },
-                                "\n",
-                                "  domain: default.compliantkuberetes\n",
-                                "  service-cluster: ops.default.compliantkuberetes\n"
-                            ]
-                        ]
-                    }
-                }
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "e19fe849-a88f-459c-b2f6-f6bc8dc5b47d"
-                }
-            }
-        },
-        
         "WorkloadClusterInstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -932,24 +663,6 @@
                 },
                 "GroupDescription": "Incoming connections for Icap servers from LB",
                 "SecurityGroupIngress": [
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "1344",
-                        "ToPort": "1344",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "22",
-                        "ToPort": "22",
-                        "CidrIp": "0.0.0.0/0"
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "1345",
-                        "ToPort": "1345",
-                        "CidrIp": "0.0.0.0/0"
-                    },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "80",
@@ -973,6 +686,114 @@
             "Metadata": {
                 "AWS::CloudFormation::Designer": {
                     "id": "520f742e-d94f-43ed-9722-984b5ae5dcf7"
+                }
+            }
+        },
+        "CK8WAFACL": {
+            "Type": "AWS::WAFv2::WebACL",
+            "Properties": {
+                "Name": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            "WAF",
+                            {
+                                "Ref": "AWS::StackName"
+                            }
+                        ]
+                    ]
+                },
+                "Scope": "REGIONAL",
+                "DefaultAction": {
+                    "Allow": {}
+                },
+                "VisibilityConfig": {
+                    "SampledRequestsEnabled": true,
+                    "CloudWatchMetricsEnabled": true,
+                    "MetricName": {
+                        "Fn::Join": [
+                            "-",
+                            [
+                                "WAF-MN-",
+                                {
+                                    "Ref": "AWS::StackName"
+                                }
+                            ]
+                        ]
+                    }
+                },
+                "Rules": [
+                    {
+                        "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+                        "Priority": 1,
+                        "OverrideAction": {
+                            "Count": {}
+                        },
+                        "VisibilityConfig": {
+                            "SampledRequestsEnabled": true,
+                            "CloudWatchMetricsEnabled": true,
+                            "MetricName": "AWSManagedRulesKnownBadInputsRuleSet"
+                        },
+                        "Statement": {
+                            "ManagedRuleGroupStatement": {
+                                "VendorName": "AWS",
+                                "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+                                "ExcludedRules": []
+                            }
+                        }
+                    },
+                    {
+                        "Name": "AWSManagedRulesAmazonIpReputationList",
+                        "Priority": 2,
+                        "OverrideAction": {
+                            "Count": {}
+                        },
+                        "VisibilityConfig": {
+                            "SampledRequestsEnabled": true,
+                            "CloudWatchMetricsEnabled": true,
+                            "MetricName": "AWSManagedRulesAmazonIpReputationList"
+                        },
+                        "Statement": {
+                            "ManagedRuleGroupStatement": {
+                                "VendorName": "AWS",
+                                "Name": "AWSManagedRulesAmazonIpReputationList",
+                                "ExcludedRules": []
+                            }
+                        }
+                    },
+                    {
+                        "Name": "AWSManagedRulesAnonymousIpList",
+                        "Priority": 3,
+                        "OverrideAction": {
+                            "Count": {}
+                        },
+                        "VisibilityConfig": {
+                            "SampledRequestsEnabled": true,
+                            "CloudWatchMetricsEnabled": true,
+                            "MetricName": "AWSManagedRulesAnonymousIpList"
+                        },
+                        "Statement": {
+                            "ManagedRuleGroupStatement": {
+                                "VendorName": "AWS",
+                                "Name": "AWSManagedRulesAnonymousIpList",
+                                "ExcludedRules": []
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "Ck8WebACLAssociation": {
+            "Type": "AWS::WAFv2::WebACLAssociation",
+            "Properties": {
+                "WebACLArn": {
+                    "Fn::GetAtt": [
+                        "CK8WAFACL",
+                        "Arn"
+                    ]
+                },
+                "ResourceArn": {
+                    "Ref": "IcapLB"
                 }
             }
         }

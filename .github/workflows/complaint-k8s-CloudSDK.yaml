@@ -24,10 +24,6 @@ on:
         description: Install filedrop UI, this will install GW Cloud REST API too.
         default: "true"
         required: true    
-      CS_API_IMAGE:
-        description: GW Cloud REST (cs-k8s-api) API docker image
-        default: glasswallsolutions/cs-k8s-api:latest
-        required: true 
       CREATE_WC:
         description: Create Workload Cluster
         default: "true"
@@ -66,7 +62,6 @@ jobs:
       run: |
         echo BRANCH=${{ github.ref }}
         echo INSTALL_CSAPI=${{ github.event.inputs.install_csapi }}
-        echo CS_API_IMAGE=${{ github.event.inputs.CS_API_IMAGE }}
         echo INSTALL_FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }}
         echo CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
         echo ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
@@ -155,7 +150,6 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
         GNUPGHOME: ${{ env.GNUPGHOME }}
-        CS_API_IMAGE: ${{ github.event.inputs.CS_API_IMAGE }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
       run: |
         cd packer
@@ -164,7 +158,6 @@ jobs:
         DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
         DOCKER_EMAIL=${{ secrets.DOCKER_EMAIL }}
         SSH_PASSWORD=${{ secrets.SSH_PASSWORD }}
-        CS_API_IMAGE=${{ github.event.inputs.CS_API_IMAGE }}
         INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
         INSTALL_FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }}
         INSTALL_CSAPI=${{ github.event.inputs.INSTALL_CSAPI }}

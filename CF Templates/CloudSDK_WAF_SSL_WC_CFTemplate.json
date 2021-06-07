@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Cloudformation template of creating only WC and integrate with existing SC",
+    "Description": "CF template for creating new WC and integrate with existing SC",
     "Parameters": {
         "WorkloadClusterInstanceCount": {
             "Type": "Number",

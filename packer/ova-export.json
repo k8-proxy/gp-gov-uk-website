@@ -1,0 +1,6 @@
+{
+    "ContainerFormat": "ova",
+    "DiskImageFormat": "VMDK",
+    "S3Bucket": "glasswall-sow-ova",
+    "S3Prefix": "vms/csapi-ck8icap/csapi-ck8icap-"
+}

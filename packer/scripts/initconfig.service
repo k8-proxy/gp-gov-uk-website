@@ -1,0 +1,15 @@
+[Unit]
+Description=Initial Configuration
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/openvt -s -w /usr/local/bin/initconfig.sh
+
+RemainAfterExit=yes
+TimeoutSec=0
+
+# Output needs to appear in instance console output
+StandardOutput=journal+console
+
+[Install]
+WantedBy=cloud-init.target

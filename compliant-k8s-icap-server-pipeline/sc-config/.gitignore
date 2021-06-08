@@ -1,0 +1,4 @@
+credentials
+group_vars/etcd.yml
+group_vars/k8s-cluster/k8s-cluster.yml
+ssh

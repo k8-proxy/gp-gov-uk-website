@@ -1,6 +1,6 @@
 # This is a workflow to build AMI with ICAP server
 
-name: CK8icap-GW_CloudSDK
+name: Ck8-main-GW
 env:
   AWS_DEFAULT_REGION: eu-west-1
 # Controls when the action will run. Triggers the workflow on push or pull request
@@ -8,17 +8,33 @@ env:
 on:
   workflow_dispatch:
     inputs:
-      create_sc:
-        description: Create Service Cluster
+      ICAP_FLAVOUR:
+        description: classic vs golang (GoLang and minio based)
+        default: classic
+        required: true
+      INSTALL_M_UI:
+        description: Management UI Required
         default: "false"
         required: true
-      cs_api_image:
-        description: CS API Image
-        default: llmsjraj/sample:latest
-        required: true  
-      create_ova:
-        description: Create OVA
+      INSTALL_CSAPI:
+        description: Install GW Cloud REST API
         default: "true"
+        required: true
+      INSTALL_FILEDROP_UI:
+        description: Install filedrop UI, this will install GW Cloud REST API too.
+        default: "true"
+        required: true    
+      CREATE_WC:
+        description: Create Workload Cluster
+        default: "true"
+        required: true 
+      CREATE_SC:
+        description: Create Service Cluster
+        default: "false"
+        required: true 
+      CREATE_OVA:
+        description: Create OVA
+        default: "false"
         required: true
   # push:
   #   branches: [ cs-api ]
@@ -41,11 +57,20 @@ jobs:
       with:
         submodules: true
 
+
+    - name: Show workflow inputs
+      run: |
+        echo BRANCH=${{ github.ref }}
+        echo INSTALL_CSAPI=${{ github.event.inputs.install_csapi }}
+        echo INSTALL_FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }}
+        echo CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
+        echo ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
+        echo INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
+
     # - name: Update submodules
     #   run: |
     #     git submodule foreach git fetch
     #     git submodule foreach git pull origin main
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
@@ -53,9 +78,9 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-west-1
 
-    - name: Update and upgrade apt
+    - name: Update apt
       run: |
-        sudo apt -y update && sudo apt -y upgrade
+        sudo apt -y update
 
     - name: Setup PWGEN
       run: |
@@ -67,6 +92,8 @@ jobs:
         pip3 --version
         sudo pip3 install setuptools-rust setuptools
         sudo -H pip install setuptools
+        sudo apt install awscli -y
+        aws --version
 
     - name: Setup compliantkubernetes-apps requirements
       run: |
@@ -76,20 +103,20 @@ jobs:
     # build artifact
     - name: Setup Packer
       run: |
-        cd vmware-scripts/packer
+        cd packer
         curl -o packer.zip https://releases.hashicorp.com/packer/1.6.6/packer_1.6.6_linux_amd64.zip
         unzip -o packer.zip
         sudo mv packer /usr/local/bin
 
     - name: Setup temporary SSH key
       run: |
-        cd vmware-scripts/packer
+        cd packer
         ssh-keygen -P "" -t rsa -b 4096 -m pem -f temp_ssh_key
-        aws ec2 import-key-pair --key-name "packer-glasswall-elastisys-pipeline" --public-key-material fileb://temp_ssh_key.pub
-        mkdir -p ../../compliant-k8s-icap-server-pipeline/wc-config/ssh
-        cp temp_ssh_key ../../compliant-k8s-icap-server-pipeline/wc-config/ssh/id_rsa
-        mkdir -p ../../compliant-k8s-icap-server-pipeline/sc-config/ssh
-        cp temp_ssh_key ../../compliant-k8s-icap-server-pipeline/sc-config/ssh/id_rsa
+        aws ec2 import-key-pair --key-name "packer-ck8-${GITHUB_RUN_ID}" --public-key-material fileb://temp_ssh_key.pub
+        mkdir -p ../compliant-k8s-icap-server-pipeline/wc-config/ssh
+        cp temp_ssh_key ../compliant-k8s-icap-server-pipeline/wc-config/ssh/id_rsa
+        mkdir -p ../compliant-k8s-icap-server-pipeline/sc-config/ssh
+        cp temp_ssh_key ../compliant-k8s-icap-server-pipeline/sc-config/ssh/id_rsa
 
     - name: Generate PGP key
       run: |
@@ -102,7 +129,7 @@ jobs:
       run: |
         cd compliant-k8s-icap-server-pipeline
         ./secrets-generator.sh
-        cat secrets.yaml # FOR DEBUG, TO BE REMOVED
+        aws s3 cp secrets.yaml s3://glasswall-dev-sc-logs/secrets-${GITHUB_RUN_ID}.yaml
 
     - name: Encrypt CK8s secrets and ssh keys
       env:
@@ -114,6 +141,7 @@ jobs:
         sops -i -e sc-config/ssh/id_rsa
 
     - name: Build Workload Cluster AMI
+      if: ${{ github.event.inputs.CREATE_WC == 'true' }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -122,23 +150,27 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
         GNUPGHOME: ${{ env.GNUPGHOME }}
-        CS_API_IMAGE: ${{ github.event.inputs.cs_api_image }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
       run: |
-        cd vmware-scripts/packer
+        cd packer
         cat > .env <<EOF
         DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} 
         DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
         DOCKER_EMAIL=${{ secrets.DOCKER_EMAIL }}
         SSH_PASSWORD=${{ secrets.SSH_PASSWORD }}
-        CS_API_IMAGE=${{ github.event.inputs.cs_api_image }}
+        INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
+        INSTALL_FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }}
+        INSTALL_CSAPI=${{ github.event.inputs.INSTALL_CSAPI }}
+        ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
+        MINIO_SECRET=${{ secrets.MINIO_SECRET }}
+        CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
         EOF
-        export SHA8=${GITHUB_SHA::8}
-        mkdir -p ../../compliant-k8s-icap-server-pipeline/.state
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var create_ova=${{ github.event.inputs.create_ova }} -var region=${{ env.AWS_DEFAULT_REGION }} aws-ami.json
+        export RUN_ID=${GITHUB_RUN_ID}
+        mkdir -p ../compliant-k8s-icap-server-pipeline/.state
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} aws-ami.json
 
     - name: Build Service Cluster AMI
-      if: ${{ github.event.inputs.create_sc == 'true' }}
+      if: ${{ github.event.inputs.CREATE_SC == 'true' }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -148,10 +180,13 @@ jobs:
         DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
         GNUPGHOME: ${{ env.GNUPGHOME }}
       run: |
-        cd vmware-scripts/packer
-        export SHA8=${GITHUB_SHA::8}
-        mkdir -p ../../compliant-k8s-icap-server-pipeline/.state
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline-sc.json aws-ami-sc.json
+        cd packer
+        cat > .env <<EOF
+        SSH_PASSWORD=${{ secrets.SSH_PASSWORD }}
+        EOF
+        export RUN_ID=${GITHUB_RUN_ID}
+        mkdir -p ../compliant-k8s-icap-server-pipeline/.state
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline-sc.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} aws-ami-sc.json
 
     - name: Delete temporary SSH key
       if: always()

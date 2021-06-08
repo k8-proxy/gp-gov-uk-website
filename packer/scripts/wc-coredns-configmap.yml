@@ -1,0 +1,31 @@
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+            lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+          pods insecure
+          fallthrough in-addr.arpa ip6.arpa
+        }
+        prometheus :9153
+        forward . /etc/resolv.conf {
+          prefer_udp
+        }
+        cache 30
+        loop
+        reload
+        loadbalance
+        hosts {
+             8.8.8.8 influxdb.ops.default.compliantkuberetes
+             8.8.8.8 elastic.ops.default.compliantkuberetes
+             fallthrough
+           }
+    }
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system

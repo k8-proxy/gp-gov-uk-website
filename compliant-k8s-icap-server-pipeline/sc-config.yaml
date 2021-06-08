@@ -1,0 +1,575 @@
+global:
+    ck8sVersion: any
+    cloudProvider: baremetal
+    clusterName: CLUSTER_NAME
+    baseDomain: default.compliantkuberetes
+    opsDomain: ops.default.compliantkuberetes
+    issuer: letsencrypt-staging
+    verifyTls: false
+    clusterDns: 10.43.0.10
+storageClasses:
+  default: local-storage
+  nfs:
+    enabled: false
+  cinder:
+    enabled: false
+  local:
+    enabled: false
+  ebs:
+    enabled: false
+objectStorage:
+    type: none
+    buckets:
+        harbor: compliant-k8s-icap-server-pipeline-harbor
+        velero: compliant-k8s-icap-server-pipeline-velero
+        elasticsearch: compliant-k8s-icap-server-pipeline-es-backup
+        influxDB: compliant-k8s-icap-server-pipeline-influxdb
+        scFluentd: compliant-k8s-icap-server-pipeline-sc-logs
+    s3:
+        region: eu-west-1
+        regionAddress: s3.eu-west-1.amazonaws.com
+        regionEndpoint: https://s3.eu-west-1.amazonaws.com
+user:
+  grafana:
+    enabled: true
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    tolerations: []
+    affinity: {}
+    nodeSelector: {}
+    userGroups:
+      grafanaAdmin: grafana_admin #maps to grafana role admin
+      grafanaEditor: grafana_editor #maps to grafana role editor
+      grafanaViewer: grafana_viewer #maps to grafana role viewer
+  # Todo remove dependencie on alertmanager from service cluster
+  alertmanager:
+    enabled: false
+    namespace: monitoring
+    ingress:
+      enabled: false
+harbor:
+  enabled: false
+  # The tolerations, affinity, and nodeSelector are applied to all harbor pods.
+  tolerations: []
+  affinity: {}
+  nodeSelector: {}
+  chartmuseum:
+    persistentVolumeClaim:
+      size: 5Gi
+    resources:
+      requests:
+        memory: 16Mi
+        cpu: 5m
+  core:
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 10m
+  database:
+    persistentVolumeClaim:
+      size: 1Gi
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+  jobservice:
+    persistentVolumeClaim:
+      size: 1Gi
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 10m
+  registry:
+    persistentVolumeClaim:
+      size: 5Gi
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 10m
+    controller:
+      resources:
+        requests:
+          memory: 16Mi
+          cpu: 1m
+  redis:
+    persistentVolumeClaim:
+      size: 1Gi
+    resources:
+      requests:
+        memory: 32Mi
+        cpu: 10m
+  notary:
+    resources:
+      requests:
+        memory: 16Mi
+        cpu: 5m
+  notarySigner:
+    resources:
+      requests:
+        memory: 16Mi
+        cpu: 5m
+  portal:
+    resources:
+      requests:
+        memory: 16Mi
+        cpu: 5m
+  trivy:
+    persistentVolumeClaim:
+      size: 5Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1024Mi
+  persistence:
+    # Valid options are "filesystem" (persistent volume), "swift", or "objectStorage" (matching global config)
+    type: filesystem
+    disableRedirect: set-me
+  oidc:
+    #group claim name used by OIDC Provider
+    groupClaimName: "set-me"
+    scope: openid,email,profile,offline_access,groups
+  backup:
+    enabled: true
+prometheus:
+  storage:
+    size: 2Gi
+  retention:
+    size: 1GiB
+    age: 3d
+    alertmanager: 72h
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 300m
+    limits:
+      memory: 2Gi
+      cpu: "1"
+  tolerations: []
+  affinity: {}
+  nodeSelector: {}
+  wcReader:
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 300m
+      limits:
+        memory: 2Gi
+        cpu: "1"
+    storage:
+      size: 2Gi
+    retention:
+      size: 1GiB
+      age: 3d
+    tolerations: []
+    affinity: {}
+    nodeSelector: {}
+dex:
+  # supported: google|okta|aaa
+  oidcProvider: google
+  allowedDomains:
+    - example.com
+  additionalKubeloginRedirects: []    
+  enableStaticLogin: true
+  resources:
+    limits:
+      cpu: 100m
+      memory: 50Mi
+    requests:
+      cpu: 100m
+      memory: 50Mi
+  tolerations: []
+  affinity: {}
+  nodeSelector: {}
+  # These two settings are curently only used by okta. If you don't need the groups claims, both options can be set to 'false'.
+  # 'insecureSkipEmailVerified' should only be set to 'true' if the user's okta
+  # configuration does not require a user to verify their identity to okta when their okta account is being created. This is not recommended.
+  insecureSkipEmailVerified: false
+  insecureEnableGroups: true
+kibana:
+  # Note sso is enabled via `elasticsearch.sso.enabled`
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+elasticsearch:
+  snapshotRepository: elastic-snapshots
+  # Create initial indices upon first startup
+  createIndices: true
+  # Single-sign-on using OIDC
+  sso:
+    enabled: false
+    # Where to find subject
+    subject_key: email
+    # Where to find roles
+    roles_key: groups
+    # Scope
+    scope: openid profile email
+  masterNode:
+    count: 1
+    storageSize: 20Gi
+    ## If null, no storageclass is specified in pvc and default storageClass is used
+    ## if the DefaultStorageClass admission plugin is enabled.
+    ## If "-", "" will be used as storageClassName.
+    storageClass: local-storage
+    javaOpts: -Xms512m -Xmx512m
+    resources:
+      requests:
+        memory: 1024Mi
+        cpu: 100m
+      limits:
+        memory: 1024Mi
+        cpu: 1
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  role: master
+    tolerations: []
+    nodeSelector: {}
+  dataNode:
+    ## Enables dedicated statefulset for data nodes.
+    ## If false, master nodes will assume data role.
+    dedicatedPods: false
+    count: 2
+    storageSize: 18Gi
+    storageClass: local-storage
+    javaOpts: -Xms512m -Xmx512m
+    resources:
+      requests:
+        memory: 1024Mi
+        cpu: 200m
+      limits:
+        memory: 1024Mi
+        cpu: 1
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  role: data
+    tolerations: []
+    nodeSelector: {}
+  clientNode:
+    ## Enables dedicated deployment for client/ingest nodes.
+    ## If false, master nodes will assume client/ingest roles
+    dedicatedPods: false
+    count: 1
+    javaOpts: -Xms512m -Xmx512m
+    resources:
+      requests:
+        memory: 1024Mi
+        cpu: 200m
+      limits:
+        memory: 1024Mi
+        cpu: 1
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  role: client
+    tolerations: []
+    nodeSelector: {}
+  # Config for https://www.elastic.co/guide/en/elasticsearch/client/curator/5.8/about.html
+  curator:
+    enabled: false
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 32Mi
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
+    retention:
+      kubeAuditSizeGB: 4
+      kubeAuditAgeDays: 3
+      kubernetesSizeGB: 10
+      kubernetesAgeDays: 3
+      otherSizeGB: 1
+      otherAgeDays: 7
+      # (Optional) retention for indices matched by 'postgresql-*'
+      # postgresql: false
+      # postgresqlSizeGB: 30
+      # postgresqlAgeDays: 30
+  # Index state management
+  ism:
+    # Overwrite ism policies
+    overwritePolicies: true
+    rolloverSizeGB: 1
+    rolloverAgeDays: 1
+    # Create default policies - kubernetes, kubeaudit, and other
+    defaultPolicies: true
+    additionalPolicies: {}
+  # Snapshot and snapshot lifecycle configuration
+  snapshot:
+    enabled: false
+    min: 7
+    max: 14
+    ageSeconds: 864000
+    retentionSchedule: 0 1 * * * # 1am
+    backupSchedule: 0 */12 * * * # run twice/day
+  extraRoles: []
+  # - role_name: log_reader
+  #   definition:
+  #     index_permissions:
+  #     - index_patterns:
+  #       - "kubernetes-*"
+  #       allowed_actions:
+  #       - "read"
+  extraRoleMappings: []
+  # - mapping_name: readall_and_monitor
+  #   definition:
+  #    users:
+  #      - "Developer Name"
+  overwriteTemplates: true
+  # Create default index templates - kubernetes, kubeaudit, and other
+  defaultTemplates: true
+  additionalTemplates: {}
+  exporter:
+    serviceMonitor:
+      interval: 30s
+      scrapeTimeout: 30s
+    resources: {}
+    #   requests:
+    #     cpu: 100m
+    #     memory: 128Mi
+    #   limits:
+    #     cpu: 100m
+    #     memory: 128Mi
+    tolerations: []
+fluentd:
+  # Enable log collection in the service cluster
+  # and store in object storage via fluentd aggregator.
+  enabled: false
+  forwarder:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 200Mi
+    tolerations: []
+    affinity: {}
+    nodeSelector: {}
+    useRegionEndpoint: false
+  aggregator:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1000Mi
+      requests:
+        cpu: 300m
+        memory: 300Mi
+    tolerations: []
+    affinity: {}
+    nodeSelector: {}
+# Log retention for service cluster logs stored in object storage.
+logRetention:
+  days: 7
+influxDB:
+  users:
+    admin: admin
+    wcWriter: wcWriter
+    scWriter: scWriter
+  createdb: true
+  resources:
+    requests:
+      memory: 4Gi
+      cpu: 0.5
+    limits:
+      memory: 8Gi
+      cpu: 2
+  persistence:
+    size: 20Gi
+  tolerations: []
+  affinity: {}
+  nodeSelector: {}
+  # Configuration for size based retention
+  retention:
+    # Enable size based retention job
+    enabled: true
+    sizeWC: 60000000
+    sizeSC: 30000000
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 250m
+        memory: 500Mi
+    # The duration of the retention policy for each database
+    durationWC: 5d
+    durationSC: 5d
+  backup:
+    enabled: false
+    schedule: 0 0 * * *
+    startingDeadlineSeconds: 200
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 250m
+        memory: 300Mi
+  backupRetention:
+    enabled: false
+    daysToRetain: 7
+    schedule: 0 0 * * *
+    startingDeadlineSeconds: 200
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 250m
+        memory: 300Mi
+alerts:
+  alertTo: "null"
+  opsGenieHeartbeat:
+    enabled: false
+    url: https://api.eu.opsgenie.com/v2/heartbeats
+    name: set-me
+  slack:
+    channel: set-me
+  opsGenie:
+    apiUrl: https://api.eu.opsgenie.com
+externalTrafficPolicy:
+  local: false
+  whitelistRange:
+    global: 0.0.0.0/0
+    ck8sdash: false
+    dex: false
+    kibana: false
+    elasticsearch: false
+    harbor: false
+    userGrafana: false
+    opsGrafana: false
+    prometheusWc: false
+nfsProvisioner:
+  server: "set-me"
+  path: /nfs
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  tolerations: []
+  affinity: {}
+  nodeSelector: {}
+ingressNginx:
+  controller:
+    # Chart deploys correctly but does not work with resourceRequests
+    resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 64Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 64Mi
+    tolerations:
+      - key: nodeType
+        operator: Exists
+        effect: NoSchedule
+    affinity: {}
+    nodeSelector: {}
+    config:
+      useProxyProtocol: false
+    useHostPort: true
+    service:
+      enabled: false
+      type: set-me
+      annotations: set-me
+    # Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
+    additionalConfig: {}
+  defaultBackend:
+    # Chart deploys correctly but does not work with resourceRequests
+    resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 64Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 64Mi
+    tolerations:
+      - key: nodeType
+        operator: Equal
+        value: elastisys
+        effect: NoSchedule
+    affinity: {}
+    nodeSelector: {}
+velero:
+  enabled: false
+  tolerations: []
+  nodeSelector: {}
+  resources:
+    limits:
+      cpu: 200m
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  restic:
+    tolerations: []
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+restore:
+  cluster: false
+  velero: false
+  veleroBackupName: latest
+issuers:
+  letsencrypt:
+    enabled: false
+    namespaces: []
+    prod:
+      email: jakub@elastisys.com
+    staging:
+      email: jakub@elastisys.com
+  extraIssuers: []
+certmanager:
+  resources: {}
+  nodeSelector: {}
+  tolerations: {}
+  affinity: {}
+  webhook:
+    resources: {}
+    nodeSelector: {}
+    tolerations: {}
+    affinity: {}
+  cainjector:
+    resources: {}
+    nodeSelector: {}
+    tolerations: {}
+    affinity: {}
+
+## Configuration for metric-server
+metricsServer:
+  enabled: false

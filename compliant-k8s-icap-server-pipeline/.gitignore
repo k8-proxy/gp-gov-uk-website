@@ -1,0 +1,10 @@
+secrets.yaml
+.sops.yaml
+.state
+wc-config/artifacts
+wc-config/credentials
+wc-config/ssh
+wc-config/group_vars/k8s-cluster/k8s-cluster.yml
+inventory.ini
+gnupghome.txt
+pipeline_key_config

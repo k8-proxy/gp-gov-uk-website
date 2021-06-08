@@ -1,0 +1,272 @@
+global:
+    ck8sVersion: any
+    cloudProvider: baremetal
+    clusterName: CLUSTER_NAME
+    baseDomain: default.compliantkuberetes
+    opsDomain: ops.default.compliantkuberetes
+    issuer: letsencrypt-prod
+    verifyTls: false
+    clusterDns: 10.43.0.10
+storageClasses:
+  default: local-storage
+  nfs:
+    enabled: false
+  cinder:
+    enabled: false
+  local:
+    enabled: true
+  ebs:
+    enabled: false
+
+objectStorage:
+    type: none
+    buckets:
+        harbor: compliant-k8s-icap-server-pipeline-harbor
+        velero: compliant-k8s-icap-server-pipeline-velero
+        elasticsearch: compliant-k8s-icap-server-pipeline-es-backup
+        influxDB: compliant-k8s-icap-server-pipeline-influxdb
+        scFluentd: compliant-k8s-icap-server-pipeline-sc-logs
+    s3:
+        region: eu-west-1
+        regionAddress: s3.eu-west-1.amazonaws.com
+        regionEndpoint: https://s3.eu-west-1.amazonaws.com
+user:
+    createNamespaces: true
+    namespaces:
+    - icap-adaptation
+    adminUsers:
+    - admin@example.com
+    alertmanager:
+        enabled: false
+        namespace: monitoring
+        ingress:
+            enabled: false
+falco:
+    enabled: true
+    resources:
+        limits:
+            cpu: 200m
+            memory: 1024Mi
+        requests:
+            cpu: 100m
+            memory: 512Mi
+    tolerations:
+    -   key: node-role.kubernetes.io/master
+        effect: NoSchedule
+    affinity: {}
+    nodeSelector: {}
+    alerts:
+        enabled: true
+        # supported: alertmanager|slack
+        type: alertmanager
+        priority: notice
+        hostPort: http://kube-prometheus-stack-alertmanager.monitoring:9093
+        # if type=slack falco.alerts.slackWebhook must be set in the secrets yaml file
+    falcoSidekick:
+        resources:
+            limits:
+                cpu: 20m
+                memory: 50Mi
+            requests:
+                cpu: 10m
+                memory: 25Mi
+
+        tolerations: []
+        affinity: {}
+        nodeSelector: {}
+prometheus:
+    remoteWrite:
+        user: wcWriter
+    storage:
+        size: 2Gi
+    retention:
+        size: 1GB
+        age: 3d
+    resources:
+        requests:
+            memory: 1Gi
+            cpu: 300m
+        limits:
+            memory: 2Gi
+            cpu: "1"
+    tolerations: []
+    affinity: {}
+    nodeSelector: {}
+    additionalScrapeConfigs: []
+opa:
+    enabled: true
+    imageRegistry:
+        enabled: true
+        enforcement: dryrun
+        URL: harbor.set-me
+    networkPolicies:
+        enabled: true
+        enforcement: dryrun
+    resourceRequests:
+        enabled: true
+        enforcement: dryrun
+    enforcements:
+        imageRegistry: dryrun
+        networkPolicies: dryrun
+        resources: dryrun
+elasticsearch:
+    masterNode:
+        count: 1
+    dataNode:
+        count: 2
+    clientNode:
+        count: 1
+fluentd:
+    tolerations:
+    -   effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        value: "true"
+        # Only run on control plane nodes
+    nodeSelector:
+        node-role.kubernetes.io/master: "true"
+    resources:
+        limits:
+            cpu: 200m
+            memory: 500Mi
+        requests:
+            cpu: 200m
+            memory: 500Mi
+    affinity: {}
+    extraConfigMaps: {}
+    user:
+        resources:
+            limits:
+                cpu: 200m
+                memory: 500Mi
+            requests:
+                cpu: 200m
+                memory: 500Mi
+        tolerations: []
+        affinity: {}
+        nodeSelector: {}
+ck8sdash:
+    enabled: false
+    tolerations: []
+    affinity: {}
+    nodeSelector: {}
+    nginx:
+        resources:
+            requests:
+                memory: 64Mi
+                cpu: 50m
+            limits:
+                memory: 128Mi
+                cpu: 100m
+    server:
+        resources:
+            requests:
+                memory: 64Mi
+                cpu: 50m
+            limits:
+                memory: 128Mi
+                cpu: 100m
+externalTrafficPolicy:
+    local: false
+    whitelistRange:
+        global: 0.0.0.0/0
+        ck8sdash: false
+nfsProvisioner:
+    server: "set-me"
+    path: /nfs
+    resources:
+        limits:
+            cpu: 100m
+            memory: 128Mi
+        requests:
+            cpu: 100m
+            memory: 128Mi
+    tolerations: []
+    affinity: {}
+    nodeSelector: {}
+ingressNginx:
+    controller:
+        resources: {}
+        # limits:
+        #   cpu: 100m
+        #   memory: 64Mi
+        # requests:
+        #   cpu: 100m
+        #   memory: 64Mi
+        tolerations:
+        -   key: nodeType
+            operator: Exists
+            effect: NoSchedule
+        affinity: {}
+        nodeSelector: {}
+        config:
+            useProxyProtocol: false
+        useHostPort: true
+        service:
+            enabled: false
+            type: set-me
+            annotations: set-me
+            # Will add custom configuration options to Nginx https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/
+        additionalConfig: {}
+    defaultBackend:
+        resources: {}
+        # limits:
+        #   cpu: 100m
+        #   memory: 64Mi
+        # requests:
+        #   cpu: 100m
+        #   memory: 64Mi
+        tolerations:
+        -   key: nodeType
+            operator: Equal
+            value: elastisys
+            effect: NoSchedule
+        affinity: {}
+        nodeSelector: {}
+velero:
+    enabled: false
+    tolerations: []
+    nodeSelector: {}
+    resources:
+        limits:
+            cpu: 200m
+            memory: 200Mi
+        requests:
+            cpu: 100m
+            memory: 100Mi
+    restic:
+        tolerations: []
+        resources:
+            limits:
+                cpu: 200m
+                memory: 200Mi
+            requests:
+                cpu: 100m
+                memory: 100Mi
+issuers:
+    letsencrypt:
+        enabled: true
+        namespaces: []
+        prod:
+            email: jakub@elastisys.com
+        staging:
+            email: jakub@elastisys.com
+    extraIssuers: []
+certmanager:
+    resources: {}
+    nodeSelector: {}
+    tolerations: {}
+    affinity: {}
+    webhook:
+        resources: {}
+        nodeSelector: {}
+        tolerations: {}
+        affinity: {}
+    cainjector:
+        resources: {}
+        nodeSelector: {}
+        tolerations: {}
+        affinity: {}
+
+## Configuration for metric-server
+metricsServer:
+  enabled: false

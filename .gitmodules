@@ -1,41 +1,11 @@
 [submodule "compliantkubernetes"]
 	path = compliantkubernetes
-	url = git@github.com:elastisys/compliantkubernetes
+	url = https://github.com/k8-proxy/compliantkubernetes
 	branch = master
 [submodule "compliantkubernetes-apps"]
 	path = compliantkubernetes-apps
-	url = git@github.com:elastisys/compliantkubernetes-apps
+	url = https://github.com/k8-proxy/compliantkubernetes-apps
 	branch = main
-[submodule "ck8s-cluster"]
-	path = ck8s-cluster
-	url = git@github.com:elastisys/ck8s-cluster
-	branch = master
-[submodule "icap-infrastructure"]
-	path = icap-infrastructure
-	url = git@github.com:elastisys/icap-infrastructure.git
-[submodule "s-k8-proxy-rebuild"]
-	path = s-k8-proxy-rebuild
-	url = git@github.com:elastisys/s-k8-proxy-rebuild.git
-[submodule "icap-management-ui"]
-	path = icap-management-ui
-	url = git@github.com:elastisys/icap-management-ui.git
-[submodule "icap-adaptation-service"]
-	path = icap-adaptation-service
-	url = git@github.com:cristiklein/icap-adaptation-service.git
-	branch = fixes-for-compliantkubernetes
-[submodule "icap-request-processing"]
-	path = icap-request-processing
-	url = git@github.com:elastisys/icap-request-processing.git
-[submodule "k8-reverse-proxy"]
-	path = k8-reverse-proxy
-	url = git@github.com:elastisys/k8-reverse-proxy.git
-	branch = develop
-[submodule "mvp-icap-service"]
-	path = mvp-icap-service
-	url = git@github.com:elastisys/mvp-icap-service.git
-[submodule "event-submission-service"]
-	path = event-submission-service
-	url = git@github.com:elastisys/event-submission-service.git
-[submodule "pod-janitor"]
-	path = pod-janitor
-	url = git@github.com:elastisys/pod-janitor.git
+[submodule "compliantkubernetes-kubespray"]
+	path = compliantkubernetes-kubespray
+	url = https://github.com/k8-proxy/compliantkubernetes-kubespray

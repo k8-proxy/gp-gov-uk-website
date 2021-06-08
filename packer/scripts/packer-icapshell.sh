@@ -167,6 +167,8 @@ if [[ "$CREATE_OVA" == "true" ]]; then
   # update grub
   update-grub
   curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/master/install.sh | sh -
+  rm -f /etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg
+	sed -i "s/Ec2/Ec2, VMwareGuestInfo/g" /etc/cloud/cloud.cfg.d/90_dpkg.cfg
   # installing the wizard
   install -T /home/ubuntu/scripts/cwizard.sh /usr/local/bin/wizard -m 0755
 

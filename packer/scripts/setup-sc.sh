@@ -23,7 +23,6 @@ maxretry = 5
 EOF
 systemctl restart fail2ban
 
-CREATE_OVA=${CREATE_OVA:-false}
 if [[ "$CREATE_OVA" == "true" ]]; then
   # switching to predictable network interfaces naming
   grep "$KERNEL_BOOT_LINE" /etc/default/grub >/dev/null || sed -Ei "s/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 $KERNEL_BOOT_LINE\"/g" /etc/default/grub
@@ -34,6 +33,8 @@ if [[ "$CREATE_OVA" == "true" ]]; then
   # update grub
   update-grub
   curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/master/install.sh | sudo sh -
+   rm -f /etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg
+	sed -i "s/Ec2/Ec2, VMwareGuestInfo/g" /etc/cloud/cloud.cfg.d/90_dpkg.cfg
   # installing the wizard
   install -T /home/ubuntu/scripts/cwizard.sh /usr/local/bin/wizard -m 0755
 

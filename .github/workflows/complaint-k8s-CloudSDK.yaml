@@ -183,6 +183,7 @@ jobs:
         cd packer
         cat > .env <<EOF
         SSH_PASSWORD=${{ secrets.SSH_PASSWORD }}
+        CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state

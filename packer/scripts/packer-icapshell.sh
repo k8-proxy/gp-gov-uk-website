@@ -21,7 +21,13 @@ apt-get update
 # install local docker registry
 docker run -d -p 127.0.0.1:30500:5000 --restart always --name registry registry:2
 docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-main && cd icap-infrastructure
+if [[ "${BRANCH}" == "main" ]]; then
+  $BRANCH_NAME="main"
+else
+  $BRANCH_NAME="develop"
+fi
+
+git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-$BRANCH_NAME && cd icap-infrastructure
 
 cd rabbitmq
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -55,8 +61,13 @@ kubectl create -n icap-adaptation secret generic policyupdateservicesecret --fro
 kubectl create -n icap-adaptation secret generic transactionqueryservicesecret --from-literal=username=query-service --from-literal=password='long-password'
 kubectl create -n icap-adaptation secret generic rabbitmq-service-default-user --from-literal=username=guest --from-literal=password='guest'
 if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
-	requestImage=$(yq eval '.imagestore.requestprocessing.tag' custom-values.yaml)
-	requestRepo=$(yq eval '.imagestore.requestprocessing.repository' custom-values.yaml)
+  if [[ "${BRANCH}" == "main" ]]; then
+   requestImage=$(yq eval '.imagestore.requestprocessing.tag' values.yaml)
+	 requestRepo=$(yq eval '.imagestore.requestprocessing.repository' values.yaml)
+  else
+   requestImage=$(yq eval '.imagestore.requestprocessing.tag' custom-values.yaml)
+	 requestRepo=$(yq eval '.imagestore.requestprocessing.repository' custom-values.yaml)
+  fi
 	docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 	docker pull $requestRepo:$requestImage
 	docker tag $requestRepo:$requestImage localhost:30500/icap-request-processing:$requestImage
@@ -75,7 +86,7 @@ if [[ "${ICAP_FLAVOUR}" == "golang" ]]; then
 	kubectl create -n icap-adaptation secret generic minio-credentials --from-literal=username='minio' --from-literal=password=$MINIO_SECRET
 
 	# deploy new Go services
-	git clone https://github.com/k8-proxy/go-k8s-infra.git -b main && pushd go-k8s-infra
+	git clone https://github.com/k8-proxy/go-k8s-infra.git -b $BRANCH_NAME && pushd go-k8s-infra
 
 	# Scale the existing adaptation service to 0
 	kubectl -n icap-adaptation scale --replicas=0 deployment/adaptation-service
@@ -123,14 +134,14 @@ fi
 
 # Install CS-API
 if [[ "${INSTALL_CSAPI}" == "true" ]]; then
-  git clone -b main https://github.com/k8-proxy/cs-k8s-api && cd cs-k8s-api
+  git clone -b $BRANCH_NAME https://github.com/k8-proxy/cs-k8s-api && cd cs-k8s-api
   helm upgrade --install -n icap-adaptation rebuild-api --set k8s_version=1.18 infra/kubernetes/chart  --atomic
 fi
 
 # Install Filedrop UI
 if [[ "${INSTALL_FILEDROP_UI}" == "true" ]]; then
   INSTALL_CSAPI="true"
-  git clone -b main https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
+  git clone -b $BRANCH_NAME https://github.com/k8-proxy/k8-rebuild.git && cd k8-rebuild
   rm -rf kubernetes/charts/sow-rest-api-0.1.0.tgz
 	rm -rf kubernetes/charts/nginx-8.2.0.tgz
 	# install helm charts

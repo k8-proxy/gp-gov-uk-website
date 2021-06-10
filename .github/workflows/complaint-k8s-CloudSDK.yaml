@@ -151,6 +151,7 @@ jobs:
         DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
         GNUPGHOME: ${{ env.GNUPGHOME }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        BRANCH: ${GITHUB_REF#refs/heads/}
       run: |
         cd packer
         cat > .env <<EOF
@@ -164,6 +165,7 @@ jobs:
         ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
         MINIO_SECRET=${{ secrets.MINIO_SECRET }}
         CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
+        BRANCH=${GITHUB_REF#refs/heads/}
         EOF
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state

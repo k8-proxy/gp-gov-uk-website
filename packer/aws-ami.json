@@ -32,7 +32,7 @@
         "Base_AMI_Name": "{{ .SourceAMIName }}",
         "Github_Run_id": "{{user `RUN_ID`}}",
         "Name": "{{user `vm_name`}}",
-        "CS_CK8S_API": "{{user `CS_API` }}",
+        "REST_API": "{{user `CS_API` }}",
         "M_UI": "{{user `M_UI` }}",
         "FILEDROP_UI": "{{user `FILEDROP_UI`}}",
         "K8S_Flavour": "CK8",

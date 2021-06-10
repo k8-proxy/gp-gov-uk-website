@@ -22,9 +22,9 @@ apt-get update
 docker run -d -p 127.0.0.1:30500:5000 --restart always --name registry registry:2
 docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 if [[ "${BRANCH}" == "main" ]]; then
-  $BRANCH_NAME="main"
+  BRANCH_NAME="main"
 else
-  $BRANCH_NAME="develop"
+  BRANCH_NAME="develop"
 fi
 
 git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-main && cd icap-infrastructure

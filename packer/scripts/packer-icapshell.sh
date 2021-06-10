@@ -27,7 +27,7 @@ else
   $BRANCH_NAME="develop"
 fi
 
-git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-$BRANCH_NAME && cd icap-infrastructure
+git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-main && cd icap-infrastructure
 
 cd rabbitmq
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash

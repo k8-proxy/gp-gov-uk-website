@@ -27,8 +27,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
-          token: ${{secrets.GITHUB_TOKEN}}
-          submodules: recursive
+          token: ${{secrets.GITHUB_TOKEN}} 
       - name: Extract branch name
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"

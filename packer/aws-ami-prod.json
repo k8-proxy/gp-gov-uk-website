@@ -18,15 +18,7 @@
       "security_group_id": "{{ user `security_group_id` }}",
       "type": "amazon-ebs",
       "ami_regions": ["{{user `region`}}"],
-      "source_ami_filter": {
-        "filters": {
-          "virtualization-type": "hvm",
-          "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
-          "root-device-type": "ebs"
-        },
-        "owners": ["099720109477"],
-        "most_recent": true
-      },
+      "source_ami": "{{user `ami_id`}}",
       "tags": {
         "OS_Version": "Ubuntu-20.04",
         "Base_AMI_Name": "{{ .SourceAMIName }}",
@@ -37,7 +29,7 @@
         "FILEDROP_UI": "{{user `FILEDROP_UI`}}",
         "K8S_Flavour": "CK8",
         "ICAP_FLAVOUR": "{{user `ICAP_FLAVOUR`}}",
-        "SDK": "eval",
+        "SDK": "prod",
         "Release_Tag": "{{user `latest_tag`}}"
       },
       "run_tags": {

@@ -70,7 +70,7 @@ jobs:
     - name: Get Release tag name
       id: get_rel_tag
       run: |
-        git fetch --tags
+        git fetch --tags --no-recurse-submodules
         git tag -l --contains ${{ github.sha }}
         latest_tag=$(git tag -l --contains ${{ github.sha }})
         latest_tag=${latest_tag:-null}

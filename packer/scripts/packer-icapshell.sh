@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 source /home/ubuntu/scripts/.env
+source /home/ubuntu/scripts/get_sdk_version.sh
 if [ -f /home/ubuntu/scripts/update_partition_size.sh ]; then
   chmod +x /home/ubuntu/scripts/update_partition_size.sh
   /home/ubuntu/scripts/update_partition_size.sh
@@ -61,14 +62,9 @@ kubectl create -n icap-adaptation secret generic policyupdateservicesecret --fro
 kubectl create -n icap-adaptation secret generic transactionqueryservicesecret --from-literal=username=query-service --from-literal=password='long-password'
 kubectl create -n icap-adaptation secret generic rabbitmq-service-default-user --from-literal=username=guest --from-literal=password='guest'
 if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
-  if [[ "${BRANCH}" == "main" ]]; then
-   requestImage=$(yq eval '.imagestore.requestprocessing.tag' values.yaml)
-	 requestRepo=$(yq eval '.imagestore.requestprocessing.repository' values.yaml)
-  else
-   requestImage=$(yq eval '.imagestore.requestprocessing.tag' custom-values.yaml)
-	 requestRepo=$(yq eval '.imagestore.requestprocessing.repository' custom-values.yaml)
-  fi
-	docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  requestImage=$(yq eval '.imagestore.requestprocessing.tag' custom-values.yaml)
+  requestRepo=$(yq eval '.imagestore.requestprocessing.repository' custom-values.yaml)
+  get_sdk_version k8-proxy/icap-request-processing $requestImage
 	docker pull $requestRepo:$requestImage
 	docker tag $requestRepo:$requestImage localhost:30500/icap-request-processing:$requestImage
 	docker push localhost:30500/icap-request-processing:$requestImage

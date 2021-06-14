@@ -1,0 +1,123 @@
+{
+  "variables": {},
+  "builders": [
+    {
+      "access_key": "{{user `aws_access_key`}}",
+      "ami_name": "{{user `vm_name`}}-prod-{{user `RUN_ID`}}",
+      "spot_instance_types": ["t2.xlarge", "t3.xlarge"],
+      "spot_price": "auto",
+      "associate_public_ip_address": true,
+      "ssh_interface": "public_ip",
+      "region": "{{user `region`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "user_data_file": "{{user `user_data_file`}}",
+      "ssh_username": "{{ user `ssh_user` }}",
+      "ssh_keypair_name": "{{ user `ssh_keypair_name` }}",
+      "ssh_private_key_file": "{{ user `ssh_private_key_file` }}",
+      "ssh_timeout": "20m",
+      "security_group_id": "{{ user `security_group_id` }}",
+      "type": "amazon-ebs",
+      "ami_regions": ["{{user `region`}}"],
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
+      "tags": {
+        "OS_Version": "Ubuntu-20.04",
+        "Base_AMI_Name": "{{ .SourceAMIName }}",
+        "Github_Run_id": "{{user `RUN_ID`}}",
+        "Name": "{{user `vm_name`}}",
+        "REST_API": "{{user `CS_API` }}",
+        "M_UI": "{{user `M_UI` }}",
+        "FILEDROP_UI": "{{user `FILEDROP_UI`}}",
+        "K8S_Flavour": "CK8",
+        "ICAP_FLAVOUR": "{{user `ICAP_FLAVOUR`}}",
+        "SDK": "eval",
+        "Release_Tag": "{{user `latest_tag`}}"
+      },
+      "run_tags": {
+        "Name": "Packer Builder {{user `vm_name`}}",
+        "Team": "{{user `team_tag`}}",
+        "Owner": "{{user `owner_tag`}}",
+        "Scope": "#k8s-compliant-kubernetes",
+        "Delete": "No"
+      },
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/sda1",
+          "volume_type": "gp2",
+          "volume_size": 30,
+          "delete_on_termination": true
+        }
+      ]
+    }
+  ],
+  "provisioners": [
+    
+    
+    {
+      "type": "file",
+      "source": "scripts",
+      "destination": "/home/ubuntu"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "mv /home/ubuntu/scripts/setupscCluster.sh /home/ubuntu/setupscCluster.sh",
+        "mv /home/ubuntu/scripts/wc-coredns-configmap.yml /home/ubuntu/wc-coredns-configmap.yml"
+      ]
+    },
+    {
+      "type": "file",
+      "source": ".env",
+      "destination": "/home/ubuntu/scripts/.env"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "chmod +x /home/ubuntu/scripts/prod_sdk.sh",
+        "sudo /home/ubuntu/scripts/prod_sdk.sh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "/home/ubuntu/sdk_version.txt",
+      "destination": "../../artifacts_staging/sdk_version.txt",
+      "direction": "download"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo rm -rf /home/ubuntu/scripts/",
+        "sudo rm -rf /home/ubuntu/icap-infrastructure/",
+        "sudo rm /home/ubuntu/sdk_version.txt"
+      ]
+    },
+    {
+      "type": "shell-local",
+      "inline_shebang": "/bin/bash",
+      "inline": [
+        "set -e",
+        "CREATE_OVA={{user `CREATE_OVA`}}",
+        "if [[ $CREATE_OVA == 'true' ]]; then",
+        "aws ec2 create-instance-export-task --region {{user `region`}} --instance-id {{build `ID`}} --target-environment vmware --export-to-s3-task file://ova-export.json > out.json",
+        "fi"
+      ]
+    },
+    {
+      "type": "shell-local",
+      "environment_vars": [
+        "OVA_NAME={{user `vm_name`}}-wc-prod-{{user `RUN_ID`}}.ova",
+        "VM_NAME=csapi-ck8icap",
+        "CREATE_OVA={{user `CREATE_OVA`}}",
+        "PUBLIC=False"
+      ],
+      "inline": ["chmod +x scripts/ova-check.sh", "scripts/ova-check.sh"]
+    }
+  ]
+}

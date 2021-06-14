@@ -66,6 +66,17 @@ jobs:
         echo CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
         echo ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }}
         echo INSTALL_M_UI=${{ github.event.inputs.INSTALL_M_UI }}
+    
+    - name: Get Release tag name
+      id: get_rel_tag
+      run: |
+        git fetch --tags
+        git tag -l --contains ${{ github.sha }}
+        latest_tag=$(git tag -l --contains ${{ github.sha }})
+        latest_tag=${latest_tag:-null}
+        echo ::set-output name=latest_tag::$latest_tag
+        mkdir -p artifacts_staging
+        echo $latest_tag > artifacts_staging/latest_tag.txt
 
     # - name: Update submodules
     #   run: |
@@ -140,7 +151,7 @@ jobs:
         sops -i -e wc-config/ssh/id_rsa
         sops -i -e sc-config/ssh/id_rsa
 
-    - name: Build Workload Cluster AMI
+    - name: Build EVAL Workload Cluster AMI
       if: ${{ github.event.inputs.CREATE_WC == 'true' }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
@@ -166,10 +177,45 @@ jobs:
         MINIO_SECRET=${{ secrets.MINIO_SECRET }}
         CREATE_OVA=${{ github.event.inputs.CREATE_OVA }}
         BRANCH=${GITHUB_REF#refs/heads/}
+        latest_tag=${{ steps.get_rel_tag.outputs.latest_tag }}
         EOF
+        latest_tag=${{ steps.get_rel_tag.outputs.latest_tag }}
+        RUN_ID=${GITHUB_RUN_ID}
+        mkdir -p ../compliant-k8s-icap-server-pipeline/.state
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} -var latest_tag=$latest_tag aws-ami.json
+
+- name: Build PROD Workload Cluster AMI
+      if: ${{ github.event.inputs.CREATE_WC == 'true' && github.ref == 'refs/heads/main' }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ env.AWS_DEFAULT_REGION }}
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_EMAIL: ${{ secrets.DOCKER_EMAIL }}
+        GNUPGHOME: ${{ env.GNUPGHOME }}
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        BRANCH: ${GITHUB_REF#refs/heads/}
+      run: |
+        cd packer
+        cat > .env <<EOF
+        DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} 
+        DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_EMAIL=${{ secrets.DOCKER_EMAIL }}
+        latest_tag=${{ steps.get_rel_tag.outputs.latest_tag }}
+        EOF
+        latest_tag=${{ steps.get_rel_tag.outputs.latest_tag }}
+        icap_flavour=${{ github.event.inputs.icap_flavour }}
+        icap_flavour=${icap_flavour:-classic}
+        install_csapi=${{ github.event.inputs.install_csapi }}
+        if [[ "${{ github.event.inputs.install_filedrop_ui }}" == "true" ]]; then
+          install_csapi="true"
+        fi
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} aws-ami.json
+        RUN_ID=${GITHUB_RUN_ID}
+        ami_id=$(aws ec2 describe-images --filters "Name=name,Values=ck8-cs-api-WC-CI-${RUN_ID}" --query 'Images[*].[ImageId]' --output text)
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var latest_tag=$latest_tag aws-ami-prod.json
 
     - name: Build Service Cluster AMI
       if: ${{ github.event.inputs.CREATE_SC == 'true' }}

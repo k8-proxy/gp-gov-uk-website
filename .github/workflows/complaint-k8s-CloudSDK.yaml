@@ -180,7 +180,7 @@ jobs:
         latest_tag=${{ steps.get_rel_tag.outputs.latest_tag }}
         EOF
         latest_tag=${{ steps.get_rel_tag.outputs.latest_tag }}
-        RUN_ID=${GITHUB_RUN_ID}
+        export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
         PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} -var latest_tag=$latest_tag aws-ami.json
 
@@ -213,7 +213,6 @@ jobs:
         fi
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
-        RUN_ID=${GITHUB_RUN_ID}
         ami_id=$(aws ec2 describe-images --filters "Name=name,Values=ck8-cs-api-WC-CI-${RUN_ID}" --query 'Images[*].[ImageId]' --output text)
         PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var latest_tag=$latest_tag aws-ami-prod.json
 

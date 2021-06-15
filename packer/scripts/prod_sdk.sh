@@ -6,7 +6,7 @@ if [ -f ./env ] ; then
 source ./env
 fi
 source ./get_sdk_version.sh
-while [[ "$status" != "0" ]]; do echo "Waiting for Kubernetes service" && sleep 5; kubectl get ns; status=$?; done
+sleep 5m
 git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-main && cd icap-infrastructure
 git clone https://github.com/filetrust/icap-infrastructure.git -b main /tmp/icap-infrastructure-sow
 cp /tmp/icap-infrastructure-sow/adaptation/values.yaml adaptation/

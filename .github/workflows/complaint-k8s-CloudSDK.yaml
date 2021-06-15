@@ -152,7 +152,7 @@ jobs:
         sops -i -e sc-config/ssh/id_rsa
 
     - name: Build EVAL Workload Cluster AMI
-      if: ${{ github.event.inputs.CREATE_WC == 'true' }}
+      if: ${{ github.event.inputs.CREATE_WC != 'true' }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -214,7 +214,7 @@ jobs:
         export RUN_ID=${GITHUB_RUN_ID}
         mkdir -p ../compliant-k8s-icap-server-pipeline/.state
         ami_id=$(aws ec2 describe-images --filters "Name=name,Values=ck8-cs-api-WC-CI-${RUN_ID}" --query 'Images[*].[ImageId]' --output text)
-        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var latest_tag=$latest_tag -var ami_id=$ami_id aws-ami-prod.json
+        PACKER_LOG=1 PACKER_LOG_PATH=packer.log packer build -var-file=aws-vars-pipeline.json -var CREATE_OVA=${{ github.event.inputs.CREATE_OVA }} -var region=${{ env.AWS_DEFAULT_REGION }} -var CS_API=${{ github.event.inputs.INSTALL_CSAPI }} -var FILEDROP_UI=${{ github.event.inputs.INSTALL_FILEDROP_UI }} -var ICAP_FLAVOUR=${{ github.event.inputs.ICAP_FLAVOUR }} -var M_UI=${{ github.event.inputs.INSTALL_M_UI }} -var latest_tag=$latest_tag -var ami_id=$ami_id aws-ami-prod.json
 
     - name: Build Service Cluster AMI
       if: ${{ github.event.inputs.CREATE_SC == 'true' }}

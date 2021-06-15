@@ -1,10 +1,6 @@
 #!/bin/bash
 set -e
-
-pushd $( dirname $0 )
-if [ -f ./env ] ; then
-source ./env
-fi
+source /home/ubuntu/scripts/.env
 source ./get_sdk_version.sh
 sleep 5m
 git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-main && cd icap-infrastructure

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 source /home/ubuntu/scripts/.env
-source ./get_sdk_version.sh
+source /home/ubuntu/scripts/get_sdk_version.sh
 sleep 5m
 git clone https://github.com/k8-proxy/icap-infrastructure.git -b k8-main && cd icap-infrastructure
 git clone https://github.com/filetrust/icap-infrastructure.git -b main /tmp/icap-infrastructure-sow

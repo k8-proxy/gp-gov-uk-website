@@ -24,3 +24,4 @@ if [["$PUBLIC" == "true" ]]; then
   aws s3 mv s3://${BUCKET}/vms/$VM_NAME/${OBJECT} s3://${BUCKET}/vms/$VM_NAME/${OVA_NAME} --acl public-read
 else
   aws s3 mv s3://${BUCKET}/vms/$VM_NAME/${OBJECT} s3://${BUCKET}/vms/$VM_NAME/${OVA_NAME}
+fi

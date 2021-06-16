@@ -134,6 +134,11 @@ if [[ "${INSTALL_CSAPI}" == "true" ]]; then
   git fetch --tags --no-recurse-submodules
   latest_github_sha=$(git rev-parse HEAD)
   tag_name=$(git tag -l --contains $latest_github_sha | head -n 1)
+  
+  if [ -z "$tag_name" ]; then
+      tag_name=$(git describe --tags --abbrev=0 | head -n 1)
+  fi
+  
   echo "SDK version is $tag_name"
   helm upgrade --install -n icap-adaptation rebuild-api --set application.api.env.SDKApiVersion="${tag_name}" --set k8s_version=1.18 infra/kubernetes/chart --atomic
 

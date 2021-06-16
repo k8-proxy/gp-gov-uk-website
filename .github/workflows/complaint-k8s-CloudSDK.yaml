@@ -72,7 +72,7 @@ jobs:
       run: |
         git fetch --tags --no-recurse-submodules
         git tag -l --contains ${{ github.sha }}
-        latest_tag=$(git tag -l --contains ${{ github.sha }})
+        latest_tag=$(git tag -l --contains ${{ github.sha }} | head -n 1)
         latest_tag=${latest_tag:-null}
         echo ::set-output name=latest_tag::$latest_tag
         mkdir -p artifacts_staging

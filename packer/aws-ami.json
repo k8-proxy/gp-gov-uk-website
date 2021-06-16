@@ -32,11 +32,13 @@
         "Base_AMI_Name": "{{ .SourceAMIName }}",
         "Github_Run_id": "{{user `RUN_ID`}}",
         "Name": "{{user `vm_name`}}",
-        "CS_CK8S_API": "{{user `CS_API` }}",
+        "REST_API": "{{user `CS_API` }}",
         "M_UI": "{{user `M_UI` }}",
         "FILEDROP_UI": "{{user `FILEDROP_UI`}}",
         "K8S_Flavour": "CK8",
-        "ICAP_FLAVOUR": "{{user `ICAP_FLAVOUR`}}"
+        "ICAP_FLAVOUR": "{{user `ICAP_FLAVOUR`}}",
+        "SDK": "eval",
+        "Release_Tag": "{{user `latest_tag`}}"
       },
       "run_tags": {
         "Name": "Packer Builder {{user `vm_name`}}",
@@ -203,12 +205,18 @@
         "sudo /home/ubuntu/scripts/packer-icapshell.sh"
       ]
     },
-    
+    {
+      "type": "file",
+      "source": "/home/ubuntu/sdk_version.txt",
+      "destination": "../../artifacts_staging/sdk_version.txt",
+      "direction": "download"
+    },
     {
       "type": "shell",
       "inline": [
         "sudo rm -rf /home/ubuntu/scripts/",
-        "sudo rm -rf /home/ubuntu/icap-infrastructure/"
+        "sudo rm -rf /home/ubuntu/icap-infrastructure/",
+        "sudo rm /home/ubuntu/sdk_version.txt"
       ]
     },
     {
@@ -225,9 +233,10 @@
     {
       "type": "shell-local",
       "environment_vars": [
-        "OVA_NAME={{user `vm_name`}}-wc-{{user `RUN_ID`}}.ova",
+        "OVA_NAME={{user `vm_name`}}-wc-eval-{{user `RUN_ID`}}.ova",
         "VM_NAME=csapi-ck8icap",
-        "CREATE_OVA={{user `CREATE_OVA`}}"
+        "CREATE_OVA={{user `CREATE_OVA`}}",
+        "PUBLIC=true"
       ],
       "inline": ["chmod +x scripts/ova-check.sh", "scripts/ova-check.sh"]
     }

@@ -6,6 +6,8 @@ service_cluster=$(cat /home/ubuntu/service-cluster.txt)
 sed -i "s|8.8.8.8|$(cat /home/ubuntu/service-cluster-ip.txt)|" /home/ubuntu/wc-coredns-configmap.yml
 kubectl apply -f /home/ubuntu/wc-coredns-configmap.yml
 kubectl delete pod --namespace kube-system --selector k8s-app=kube-dns
+sed -i "s|$(cat /home/ubuntu/service-cluster-ip.txt)|8.8.8.8|" /home/ubuntu/wc-coredns-configmap.yml
+
 cat /home/ubuntu/cluster.txt | xargs -I {} kubectl patch prometheuses.monitoring.coreos.com kube-prometheus-stack-prometheus -n monitoring --type='json' -p '[{"op": "replace", "path": "/spec/externalLabels/cluster", "value":"'{}'"}]'
 echo "https://influxdb.${service_cluster}/api/v1/prom/write?db=workload_cluster&u=${monitoring_username}&p=${monitoring_password}" > /home/ubuntu/influxdb-url.txt
 cat /home/ubuntu/influxdb-url.txt | xargs -I {} kubectl patch prometheuses.monitoring.coreos.com kube-prometheus-stack-prometheus -n monitoring --type='json' -p '[{"op": "replace", "path": "/spec/remoteWrite/0/url", "value":"'{}'"}]'

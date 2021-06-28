@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: auto_tagging
-        uses: k8-proxy/auto-tagging@v0.0.1
+        uses: k8-proxy/auto-tagging@v0.1.0
         with:
            GITHUBPAT: ${{secrets.GITHUBPAT}}
            main_branch_name: "main"

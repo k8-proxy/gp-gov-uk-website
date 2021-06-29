@@ -61,6 +61,10 @@
         "GWSSLCertificate":{
             "Type": "String",
             "Description": "ARN of ACM Certificate for SSL"
+        },
+        "SecurityGroupInboundCIDR": {
+            "Description": "Enter the Security Group inbound CIDR",
+            "Type": "String"
         }
     },
     "Outputs": {
@@ -287,19 +291,25 @@
                         "IpProtocol": "TCP",
                         "FromPort": "3000",
                         "ToPort": "3000",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "5601",
                         "ToPort": "5601",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "443",
                         "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp":{
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     }
                 ]
             },
@@ -420,6 +430,34 @@
                 ],
                 "Port": 443,
                 "Protocol": "HTTPS"
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "b440546a-f676-4de5-8f04-8db0a78862cc"
+                }
+            }
+        },
+        "IcapLBListener80": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "Type": "redirect",
+                        "RedirectConfig": {
+                        "Protocol": "HTTPS",
+                        "Port": 443,
+                        "Host": "#{host}",
+                        "Path": "/#{path}",
+                        "Query": "#{query}",
+                        "StatusCode": "HTTP_301"
+                       }
+                    }
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "IcapLB"
+                },
+                "Port": 80,
+                "Protocol": "HTTP"
             },
             "Metadata": {
                 "AWS::CloudFormation::Designer": {
@@ -850,19 +888,25 @@
                         "IpProtocol": "TCP",
                         "FromPort": "80",
                         "ToPort": "80",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "443",
                         "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "8080",
                         "ToPort": "8080",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     }
                 ]
             },

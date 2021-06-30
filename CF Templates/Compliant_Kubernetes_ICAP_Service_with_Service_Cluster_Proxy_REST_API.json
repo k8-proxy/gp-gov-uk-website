@@ -57,7 +57,15 @@
             "Type": "Number",
             "Default": "200",
             "MinValue": "20"
-        }
+        },
+        "SecurityGroupInboundCIDR": {
+            "Description": "Enter the Security Group inbound CIDR",
+            "Type": "String"
+        },
+        "StackOwner": {
+            "Description": "Owner of Cloudformation Stack",
+            "Type": "String"
+        } 
         
     },
     "Outputs": {
@@ -284,37 +292,49 @@
                         "IpProtocol": "TCP",
                         "FromPort": "3000",
                         "ToPort": "3000",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "22",
                         "ToPort": "22",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "5601",
                         "ToPort": "5601",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "31829",
                         "ToPort": "31829",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "8080",
                         "ToPort": "8080",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "443",
                         "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     }
                 ]
             },
@@ -936,37 +956,49 @@
                         "IpProtocol": "TCP",
                         "FromPort": "1344",
                         "ToPort": "1344",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "22",
                         "ToPort": "22",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp":  {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "1345",
                         "ToPort": "1345",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp":  {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "80",
                         "ToPort": "80",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp":  {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "443",
                         "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp":  {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "8080",
                         "ToPort": "8080",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp":  {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     }
                 ]
             },

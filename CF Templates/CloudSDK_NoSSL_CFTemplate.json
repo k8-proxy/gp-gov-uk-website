@@ -57,7 +57,11 @@
             "Type": "Number",
             "Default": "200",
             "MinValue": "20"
-        }        
+        },
+        "SecurityGroupInboundCIDR": {
+            "Description": "Enter the Security Group inbound CIDR",
+            "Type": "String"
+        }         
     },
     "Outputs": {
         "LoadBalancerDNSName": {
@@ -283,13 +287,17 @@
                         "IpProtocol": "TCP",
                         "FromPort": "3000",
                         "ToPort": "3000",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "5601",
                         "ToPort": "5601",
-                        "CidrIp": "0.0.0.0/0"
+                        "CidrIp": {
+                            "Ref": "SecurityGroupInboundCIDR"
+                        }
                     },
                     {
                         "IpProtocol": "TCP",

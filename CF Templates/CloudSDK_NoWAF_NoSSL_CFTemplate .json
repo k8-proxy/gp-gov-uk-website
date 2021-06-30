@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "CF template for creating new WC and SC for CK8",
+    "Description": "CF Template with Security hardening without WAF and SSL",
     "Parameters": {
         "WorkloadClusterInstanceCount": {
             "Type": "Number",
@@ -61,12 +61,7 @@
         "SecurityGroupInboundCIDR": {
             "Description": "Enter the Security Group inbound CIDR",
             "Type": "String"
-        },
-        "StackOwner": {
-            "Description": "Owner of Cloudformation Stack",
-            "Type": "String"
-        } 
-        
+        }         
     },
     "Outputs": {
         "LoadBalancerDNSName": {
@@ -298,14 +293,6 @@
                     },
                     {
                         "IpProtocol": "TCP",
-                        "FromPort": "22",
-                        "ToPort": "22",
-                        "CidrIp": {
-                            "Ref": "SecurityGroupInboundCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "TCP",
                         "FromPort": "5601",
                         "ToPort": "5601",
                         "CidrIp": {
@@ -314,26 +301,10 @@
                     },
                     {
                         "IpProtocol": "TCP",
-                        "FromPort": "31829",
-                        "ToPort": "31829",
-                        "CidrIp": {
-                            "Ref": "SecurityGroupInboundCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "8080",
-                        "ToPort": "8080",
-                        "CidrIp": {
-                            "Ref": "SecurityGroupInboundCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "TCP",
                         "FromPort": "443",
                         "ToPort": "443",
-                        "CidrIp": {
-                            "Ref": "SecurityGroupInboundCIDR"
+                        "SourceSecurityGroupId": {
+                            "Ref": "WorkloadClusterInstanceSecurityGroup"
                         }
                     }
                 ]
@@ -369,7 +340,7 @@
                 ],
                 "SecurityGroups": [
                     {
-                        "Ref": "WorkloadClusterInstanceSecurityGroup"
+                        "Ref": "LBSecurityGroup"
                     }
                 ],
                 "Type": "application",
@@ -402,29 +373,6 @@
                 }
             }
         },
-        "IcapLBListener8080": {
-            "Type": "AWS::ElasticLoadBalancingV2::Listener",
-            "Properties": {
-                "DefaultActions": [
-                    {
-                        "Type": "forward",
-                        "TargetGroupArn": {
-                            "Ref": "IcapLBTargetGroup8080"
-                        }
-                    }
-                ],
-                "LoadBalancerArn": {
-                    "Ref": "IcapLB"
-                },
-                "Port": 8080,
-                "Protocol": "HTTP"
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "b440546a-f676-4de5-8f04-8db0a78862cc"
-                }
-            }
-        },
         "IcapLBListener80": {
             "Type": "AWS::ElasticLoadBalancingV2::Listener",
             "Properties": {
@@ -448,90 +396,6 @@
                 }
             }
         },
-        "IcapLBListener443": {
-            "Type": "AWS::ElasticLoadBalancingV2::Listener",
-            "Properties": {
-                "DefaultActions": [
-                    {
-                        "Type": "forward",
-                        "TargetGroupArn": {
-                            "Ref": "IcapLBTargetGroup443"
-                        }
-                    }
-                ],
-                "LoadBalancerArn": {
-                    "Ref": "IcapLB"
-                },
-                "Port": 443,
-                "Protocol": "HTTP"
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "b440546a-f676-4de5-8f04-8db0a78862cc"
-                }
-            }
-        },
-        "IcapLBTargetGroup8080": {
-            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-            "Properties": {
-                "Name": {
-                    "Fn::Join": [
-                        "-",
-                        [
-                            "TG8080",
-                            {
-                                "Ref": "AWS::StackName"
-                            }
-                        ]
-                    ]
-                },
-                "HealthCheckEnabled": true,
-                "HealthCheckIntervalSeconds": "30",
-                "HealthCheckPath": "/api/Health",
-                "HealthCheckPort": 8080,
-                "Port": 8080,
-                "HealthCheckProtocol": "HTTP",
-                "HealthyThresholdCount": 2,
-                "UnhealthyThresholdCount": 2,
-                "Protocol": "HTTP",
-                "VpcId": {
-                    "Ref": "LBVPC"
-                },
-                "TargetGroupAttributes": [
-                    {
-                        "Key": "deregistration_delay.timeout_seconds",
-                        "Value": 60
-                    }
-                ],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": {
-                            "Fn::Join": [
-                                "-",
-                                [
-                                    "TG8080",
-                                    {
-                                        "Ref": "AWS::StackName"
-                                    }
-                                ]
-                            ]
-                        }
-                    },
-                    {
-                        "Key": "CFStack",
-                        "Value": {
-                            "Ref": "AWS::StackId"
-                        }
-                    }
-                ]
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "d5a47980-ca87-44cf-a758-19389e29056c"
-                }
-            }
-        },
         "IcapLBTargetGroup80": {
             "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
             "Properties": {
@@ -549,7 +413,7 @@
                 "HealthCheckEnabled": true,
                 "HealthCheckIntervalSeconds": "30",
                 "HealthCheckPath": "/api/Health",
-                "HealthCheckPort": 8080,
+                "HealthCheckPort": 80,
                 "Port": 80,
                 "HealthCheckProtocol": "HTTP",
                 "HealthyThresholdCount": 2,
@@ -571,68 +435,7 @@
                             "Fn::Join": [
                                 "-",
                                 [
-                                    "TG8080",
-                                    {
-                                        "Ref": "AWS::StackName"
-                                    }
-                                ]
-                            ]
-                        }
-                    },
-                    {
-                        "Key": "CFStack",
-                        "Value": {
-                            "Ref": "AWS::StackId"
-                        }
-                    }
-                ]
-            },
-            "Metadata": {
-                "AWS::CloudFormation::Designer": {
-                    "id": "d5a47980-ca87-44cf-a758-19389e29056c"
-                }
-            }
-        },
-        "IcapLBTargetGroup443": {
-            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
-            "Properties": {
-                "Name": {
-                    "Fn::Join": [
-                        "-",
-                        [
-                            "TG443",
-                            {
-                                "Ref": "AWS::StackName"
-                            }
-                        ]
-                    ]
-                },
-                "HealthCheckEnabled": true,
-                "HealthCheckIntervalSeconds": "30",
-                "HealthCheckPath": "/api/Health",
-                "HealthCheckPort": 8080,
-                "Port": 443,
-                "HealthCheckProtocol": "HTTP",
-                "HealthyThresholdCount": 2,
-                "UnhealthyThresholdCount": 2,
-                "Protocol": "HTTP",
-                "VpcId": {
-                    "Ref": "LBVPC"
-                },
-                "TargetGroupAttributes": [
-                    {
-                        "Key": "deregistration_delay.timeout_seconds",
-                        "Value": 60
-                    }
-                ],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": {
-                            "Fn::Join": [
-                                "-",
-                                [
-                                    "TG8080",
+                                    "TG80",
                                     {
                                         "Ref": "AWS::StackName"
                                     }
@@ -722,7 +525,10 @@
                                 "  domain: default.compliantkuberetes\n",
                                 "  service-cluster-ip: ",
                                 {
-                                    "Fn::GetAtt":[ "CK8sServiceCluster" ,"PublicIp"]
+                                    "Fn::GetAtt": [
+                                        "CK8sServiceCluster",
+                                        "PrivateIp"
+                                    ]
                                 },
                                 "\n",
                                 "  service-cluster: ops.default.compliantkuberetes\n"
@@ -762,13 +568,7 @@
                 },
                 "TargetGroupARNs": [
                     {
-                        "Ref": "IcapLBTargetGroup8080"
-                    },
-                    {
                         "Ref": "IcapLBTargetGroup80"
-                    },
-                    {
-                        "Ref": "IcapLBTargetGroup443"
                     }
                 ],
                 "Tags": [
@@ -943,7 +743,6 @@
                 }
             }
         },
-        
         "WorkloadClusterInstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -954,49 +753,33 @@
                 "SecurityGroupIngress": [
                     {
                         "IpProtocol": "TCP",
-                        "FromPort": "1344",
-                        "ToPort": "1344",
-                        "CidrIp": {
-                            "Ref": "SecurityGroupInboundCIDR"
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "SourceSecurityGroupId": {
+                            "Ref": "LBSecurityGroup"
                         }
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "22",
-                        "ToPort": "22",
-                        "CidrIp":  {
-                            "Ref": "SecurityGroupInboundCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "1345",
-                        "ToPort": "1345",
-                        "CidrIp":  {
-                            "Ref": "SecurityGroupInboundCIDR"
-                        }
-                    },
+                    }
+                ]
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "520f742e-d94f-43ed-9722-984b5ae5dcf7"
+                }
+            }
+        },
+        "LBSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "LBVPC"
+                },
+                "GroupDescription": "Incoming connections for LB",
+                "SecurityGroupIngress": [
                     {
                         "IpProtocol": "TCP",
                         "FromPort": "80",
                         "ToPort": "80",
-                        "CidrIp":  {
-                            "Ref": "SecurityGroupInboundCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "443",
-                        "ToPort": "443",
-                        "CidrIp":  {
-                            "Ref": "SecurityGroupInboundCIDR"
-                        }
-                    },
-                    {
-                        "IpProtocol": "TCP",
-                        "FromPort": "8080",
-                        "ToPort": "8080",
-                        "CidrIp":  {
+                        "CidrIp": {
                             "Ref": "SecurityGroupInboundCIDR"
                         }
                     }
@@ -1007,8 +790,8 @@
                     "id": "520f742e-d94f-43ed-9722-984b5ae5dcf7"
                 }
             }
-        }
-    },
+        },
+        
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [

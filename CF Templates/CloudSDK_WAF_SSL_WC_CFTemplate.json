@@ -817,7 +817,30 @@
                                 "ExcludedRules": []
                             }
                         }
-                    }
+                    },
+                    {
+                        "Name": "AWS-AWSManagedRulesCommonRuleSet",
+                        "Priority": 4,
+                        "Statement": {
+                          "ManagedRuleGroupStatement": {
+                            "VendorName": "AWS",
+                            "Name": "AWSManagedRulesCommonRuleSet",
+                            "ExcludedRules": [
+                              {
+                                "Name": "SizeRestrictions_BODY"
+                              }
+                            ]
+                          }
+                        },
+                        "OverrideAction": {
+                          "None": {}
+                        },
+                        "VisibilityConfig": {
+                          "SampledRequestsEnabled": true,
+                          "CloudWatchMetricsEnabled": true,
+                          "MetricName": "AWS-AWSManagedRulesCommonRuleSet"
+                        }
+                      }
                 ]
             }
         },

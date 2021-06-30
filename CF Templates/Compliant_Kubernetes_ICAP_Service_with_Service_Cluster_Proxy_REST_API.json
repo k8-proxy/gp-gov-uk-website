@@ -61,6 +61,10 @@
         "SecurityGroupInboundCIDR": {
             "Description": "Enter the Security Group inbound CIDR",
             "Type": "String"
+        },
+        "StackOwner": {
+            "Description": "Owner of Cloudformation Stack",
+            "Type": "String"
         } 
         
     },

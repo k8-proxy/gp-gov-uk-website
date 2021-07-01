@@ -231,12 +231,10 @@
       "environment_vars": [
         "OVA_NAME={{user `vm_name`}}-sc-{{user `RUN_ID`}}.ova",
         "VM_NAME=csapi-ck8icap",
-        "CREATE_OVA={{user `CREATE_OVA`}}"
+        "CREATE_OVA={{user `CREATE_OVA`}}",
+        "PUBLIC=true"
       ],
-      "inline": [
-        "chmod +x scripts/ova-check.sh",
-        "scripts//ova-check.sh"
-      ]
+      "inline": ["chmod +x scripts/ova-check.sh", "scripts/ova-check.sh"]
     }
   ]
 }

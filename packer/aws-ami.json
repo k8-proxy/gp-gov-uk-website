@@ -4,7 +4,7 @@
     {
       "access_key": "{{user `aws_access_key`}}",
       "ami_name": "{{user `vm_name`}}-{{user `RUN_ID`}}",
-      "spot_instance_types": ["t2.xlarge", "t3.xlarge"],
+      "spot_instance_types": ["t2.2xlarge", "t3.2xlarge"],
       "spot_price": "auto",
       "associate_public_ip_address": true,
       "ssh_interface": "public_ip",

@@ -42,6 +42,10 @@
             "Default": "64",
             "MinValue": "20"
         },
+        "GWSSLCertificate": {
+            "Description": "Enter ARN of ACM Certificate",
+            "Type": "String"
+        },
         "SecurityGroupInboundCIDR": {
             "Description": "Enter the Security Group inbound CIDR",
             "Type": "String"

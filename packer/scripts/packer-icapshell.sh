@@ -144,7 +144,7 @@ if [[ "${INSTALL_CSAPI}" == "true" ]]; then
   if [[ "${ICAP_FLAVOUR}" == "classic" ]]; then
     helm upgrade --install -n icap-adaptation rebuild-api --set application.api.env.SDKApiVersion="${tag_name}" --set k8s_version=1.18 infra/kubernetes/chart --atomic
   else
-    helm upgrade --install -n icap-adaptation rebuild-api --set application.api.env.SDKApiVersion="${tag_name}",resources.api.limits.cpu="1500m",resources.api.requests.cpu="1000m",resources.api.requests.memory="1000Mi",replicaCount="4" infra/kubernetes/chart && popd
+    helm upgrade --install -n icap-adaptation rebuild-api --set application.api.env.SDKApiVersion="${tag_name}",resources.api.limits.cpu="1500m",resources.api.requests.cpu="1000m",resources.api.requests.memory="1000Mi",replicaCount="4" infra/kubernetes/chart
   fi
 fi
 

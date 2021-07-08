@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "CF Template with Security hardening and WAF and SSL",
+    "Description": "CF Template with Lacework integration and Security hardening",
     "Parameters": {
         "WorkloadClusterInstanceCount": {
             "Type": "Number",

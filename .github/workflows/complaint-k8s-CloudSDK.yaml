@@ -1,5 +1,5 @@
 # This is a workflow to build AMI with ICAP server
-
+#vault version
 name: Ck8-main-GW
 env:
   AWS_DEFAULT_REGION: eu-west-1
